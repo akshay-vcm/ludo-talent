@@ -77,7 +77,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 .bigdie .pips{display:block;width:100%;height:100%;fill:#1f2d78}
 .bigdie .go{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:19px;color:#2a3a8c;letter-spacing:-.5px}
 .bigdie.go{animation:bob 1s ease-in-out infinite;box-shadow:inset 0 -3px 0 #c8d2e2,0 5px 0 #9fb0cc,0 0 0 3px #ffe066,0 0 20px 4px #ffe066aa}
-.bigdie.spin{animation:tumble .32s linear infinite}
+.bigdie.spin{animation:tumble .2s linear infinite}
 .bigdie.chosen .pips{fill:#e0700f}
 @keyframes bob{50%{transform:translateY(-5px)}}
 @keyframes tumble{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(180deg) translateY(-8px) scale(.92)}100%{transform:rotate(360deg) translateY(0)}}
@@ -141,7 +141,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 /* tokens */
 #tokens{position:absolute;inset:0;pointer-events:none}
 .tk{position:absolute;width:calc(var(--u)*1.06);height:calc(var(--u)*1.41);transform:translate(-50%,-78%);
-  transition:left .18s ease-in-out,top .18s ease-in-out;pointer-events:auto}
+  transition:left .15s ease-in-out,top .15s ease-in-out;pointer-events:auto}
 .tk svg{width:100%;height:100%;overflow:visible}
 .tk.small{width:calc(var(--u)*.7);height:calc(var(--u)*.93)}
 .tk.can{animation:hop .5s ease-in-out infinite}
@@ -306,7 +306,7 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-const ITEM_COUNTS=[3,3,4,4,5],MAX_HELD=3,STEP=210;   // ms per square a token moves
+const ITEM_COUNTS=[3,3,4,4,5],MAX_HELD=3,STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -412,7 +412,7 @@ function nextTurn(bonus){
 async function doRoll(){
   if(S.phase!=='roll')return;
   S.phase='anim';S.rolling=true;
-  for(let k=0;k<8;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(75);}
+  for(let k=0;k<5;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(45);}
   S.rolling=false;const v=rollDie(cur().dry||0,S.sixes>0);
   S.roll=v;S.chosen=false;cur().last=v;cur().dry=v===6?0:(cur().dry||0)+1;
   if(v===6){S.sixes++;
@@ -430,7 +430,7 @@ async function afterValue(){
   S.moves=moves;S.phase='move';render();
   if(cur().type==='cpu'){await sleep(450);const m=botPick(pi,moves);doMove(pi,m.ti,m.sim);return;}
   const distinct=new Set(moves.map(m=>cur().tokens[m.ti]));
-  if(distinct.size===1){await sleep(500);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
+  if(distinct.size===1){await sleep(400);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
 }
 async function doMove(pi,ti,sim){
   if(S.phase!=='move')return;
@@ -448,7 +448,7 @@ async function doMove(pi,ti,sim){
       else if(it==='fence'){if(p.fence<MAX_HELD)p.fence++;notes.push('collected a fence');}
       else{bonus=true;notes.push('got +1, extra roll');}
       S.fx={id:Math.random().toString(36).slice(2),kind:it,idx,pi};
-      refreshItems(it);render();await sleep(750);}}
+      refreshItems(it);render();await sleep(380);}}
   const g=p.tokens[ti];
   if(g<=50){const idx=cellOf(p,g);
     if(!SAFE.has(idx)){S.players.forEach((q,qi)=>{if(qi===pi)return;
@@ -460,7 +460,7 @@ async function doMove(pi,ti,sim){
   if(notes.length)S.msg=`${p.name} ${[...new Set(notes)].join(', ')}.`;
   render();
   if(left.length<=1){if(left.length)S.winners.push(S.players.indexOf(left[0]));S.phase='over';render();await sleep(500);showWin();return;}
-  await sleep(notes.length?650:200);
+  await sleep(notes.length?450:150);
   nextTurn(bonus);
 }
 
@@ -489,7 +489,7 @@ function botScore(pi,m){
 }
 function botPick(pi,moves){return moves.reduce((a,b)=>botScore(pi,b)>botScore(pi,a)?b:a);}
 async function botTurn(){
-  const pi=S.turn;await sleep(750);
+  const pi=S.turn;await sleep(600);
   if(S.turn!==pi||S.phase!=='roll')return;
   const p=cur();
   if(p.fence>0&&!S.fenceUsed&&Math.random()<.7){
@@ -720,7 +720,7 @@ function playFx(fx){
   const end=fx.kind==='plus'?2.2:Math.min(1.1,b.width/size);
   el.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${dx*.5}px,${dy*.5-60}px) scale(1.6)`,offset:.45},
     {transform:`translate(${dx}px,${dy}px) scale(${end})`,opacity:fx.kind==='plus'?1:.3}],
-    {duration:700,easing:'cubic-bezier(.4,0,.3,1)'}).onfinish=()=>{
+    {duration:350,easing:'cubic-bezier(.4,0,.3,1)'}).onfinish=()=>{
       el.remove();
       if(fx.kind==='plus'){const t=document.createElement('div');t.className='plusPop';t.textContent='+1';
         Object.assign(t.style,{left:(b.left+b.width/2)+'px',top:(b.top+b.height/2)+'px'});document.body.appendChild(t);
@@ -758,7 +758,7 @@ function playThrow(from,to,k){
   el.animate([{transform:'translate(-50%,-50%) rotate(0) scale(.7)'},
     {transform:`translate(calc(-50% + ${dx/2}px),calc(-50% + ${dy/2-lift}px)) rotate(${spin/2}deg) scale(1.5)`,offset:.5},
     {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) rotate(${spin}deg) scale(1.1)`}],
-    {duration:850,easing:'cubic-bezier(.35,0,.65,1)'}).onfinish=done;
+    {duration:420,easing:'cubic-bezier(.35,0,.65,1)'}).onfinish=done;
 }
 function impact(to,k){
   const b=document.querySelector(`[data-ava="${to}"]`);if(!b)return;const B=b.getBoundingClientRect();
