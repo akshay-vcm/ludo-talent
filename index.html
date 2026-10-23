@@ -141,7 +141,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 /* tokens */
 #tokens{position:absolute;inset:0;pointer-events:none}
 .tk{position:absolute;width:calc(var(--u)*1.3);height:calc(var(--u)*1.62);transform:translate(-50%,-84%);
-  transition:left .14s ease-out,top .14s ease-out;pointer-events:auto}
+  transition:left .24s ease-in-out,top .24s ease-in-out;pointer-events:auto}
 .tk svg{width:100%;height:100%;overflow:visible}
 .tk.small{width:calc(var(--u)*.92);height:calc(var(--u)*1.15)}
 .tk.can{animation:hop .5s ease-in-out infinite}
@@ -154,6 +154,68 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 @keyframes arrowbob{50%{margin-top:calc(var(--u)*.3)}}
 @keyframes arrowbobup{50%{margin-top:calc(var(--u)*-.3)}}
 
+/* fence confirm */
+.cell.chosenF::before{content:"";position:absolute;inset:0;background:#fff6;border-radius:4px;z-index:3;animation:none}
+.ghost{position:absolute;inset:-6%;z-index:4;opacity:.75;animation:blink 1s infinite}
+.ghost svg{width:100%;height:100%}
+#fconfirm{position:absolute;z-index:90;transform:translate(-50%,-115%);display:flex;gap:6px;background:#0d1a4fdd;padding:5px;border-radius:999px;
+  box-shadow:0 4px 12px #0007}
+#fconfirm.below{transform:translate(-50%,15%)}
+#fconfirm button{width:38px;height:38px;border-radius:50%;font-size:21px;font-weight:900;color:#fff;display:grid;place-items:center}
+#fconfirm .ok{background:#22b14c;box-shadow:0 3px 0 #157a33}
+#fconfirm .no{background:#e8433a;box-shadow:0 3px 0 #a3201a}
+/* throwables */
+.corner{position:relative}
+.bub.emo span{font-size:22px;line-height:1}
+.tray{position:absolute;z-index:95;display:flex;gap:4px;background:#ffffffee;padding:6px 8px;border-radius:999px;box-shadow:0 6px 16px #0007}
+.corner:not(.t) .tray{bottom:calc(100% + 6px)}
+.corner.t .tray{top:calc(100% + 6px)}
+.corner.r .tray{right:0}
+.tray button{font-size:27px;width:42px;height:42px;border-radius:50%}
+.tray button:active{transform:scale(1.2)}
+.ava{cursor:pointer}
+.ava.target{animation:tgt .8s ease-in-out infinite;border-color:#ff5a5a}
+@keyframes tgt{50%{box-shadow:0 0 0 6px #ff5a5a66,0 0 18px #ff5a5a}}
+.ava.hit{animation:shake .5s ease-in-out}
+@keyframes shake{20%{transform:translateX(-7px) rotate(-8deg)}40%{transform:translateX(6px) rotate(6deg)}60%{transform:translateX(-4px) rotate(-3deg)}80%{transform:translateX(3px)}}
+.ava.loved{box-shadow:0 0 0 4px #ff6fa8,0 0 24px #ff6fa8}
+.splat{position:fixed;z-index:205;border-radius:50%;background:radial-gradient(circle at 45% 50%,#e82a1fcc 0 35%,#e82a1f88 50%,transparent 68%);
+  animation:splat 1.6s ease-out forwards;pointer-events:none}
+@keyframes splat{0%{transform:scale(.2)}15%{transform:scale(1.15)}80%{opacity:1}100%{opacity:0;transform:scale(1.05) translateY(6px)}}
+.proj{position:fixed;z-index:210;font-size:38px;pointer-events:none;transform:translate(-50%,-50%);filter:drop-shadow(0 4px 3px #0006)}
+.burst{position:fixed;z-index:210;font-size:24px;pointer-events:none;transform:translate(-50%,-50%);animation:burst 1.2s ease-out forwards}
+@keyframes burst{0%{transform:translate(-50%,-50%) scale(.4);opacity:1}100%{transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(1.2);opacity:0}}
+/* chat */
+#chatBtn b{position:absolute;top:2px;right:0;min-width:17px;height:17px;border-radius:9px;background:#ff3b3b;color:#fff;font-size:11px;font-weight:900;
+  display:grid;place-items:center;padding:0 3px;box-shadow:0 0 0 2px #1b2a7a}
+#chat{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(100vw,520px);height:min(62svh,460px);z-index:150;
+  background:var(--card);color:var(--cardInk);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px #0007;display:flex;flex-direction:column;
+  padding:12px 12px max(12px,env(safe-area-inset-bottom))}
+#chat[hidden]{display:none}
+.chead{display:flex;justify-content:space-between;align-items:center;font-size:17px;padding:0 4px 8px}
+.chead button{font-size:20px;color:var(--cardMuted);width:34px;height:34px}
+#clog{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px}
+.cm{align-self:flex-start;max-width:82%;background:var(--chip);border-radius:14px 14px 14px 4px;padding:7px 11px;font-size:15px;line-height:1.35;word-wrap:break-word}
+.cm span{display:block;font-size:12px;font-weight:800;margin-bottom:1px}
+.cm.mine{align-self:flex-end;background:#d9f7e3;color:#163d22;border-radius:14px 14px 4px 14px}
+@media (prefers-color-scheme: dark){.cm.mine{background:#1f5a35;color:#e6fff0}}
+.quick{display:flex;gap:6px;overflow-x:auto;padding:8px 2px;scrollbar-width:none}
+.quick button{flex:none;background:var(--chip);border-radius:999px;padding:7px 12px;font-size:14px;white-space:nowrap}
+.cin{display:flex;gap:8px}
+.cin input{flex:1;min-width:0;border:none;background:var(--chip);border-radius:999px;padding:11px 14px;font:inherit;font-size:16px;color:inherit}
+.cin button{background:#22b14c;color:#fff;font-weight:800;border-radius:999px;padding:0 18px}
+.speech{position:fixed;z-index:160;width:max-content;max-width:200px;background:#fff;color:#203040;font-weight:700;font-size:14px;padding:8px 12px;border-radius:14px;
+  box-shadow:0 4px 12px #0006;pointer-events:none;animation:speech 3.5s ease forwards}
+@keyframes speech{0%{opacity:0;scale:.6}8%{opacity:1;scale:1}85%{opacity:1}100%{opacity:0}}
+/* pickup flight */
+.fly{position:fixed;z-index:200;pointer-events:none;will-change:transform}
+.fly svg{width:100%;height:100%;filter:drop-shadow(0 0 8px #fff8a0) drop-shadow(0 3px 2px #0006)}
+.plusPop{position:fixed;z-index:200;pointer-events:none;transform:translate(-50%,-50%);font-weight:900;font-size:44px;color:#fff;
+  -webkit-text-stroke:3px #c24f00;paint-order:stroke;text-shadow:0 0 18px #ffd34d;animation:plusPop 1.1s ease-out forwards}
+@keyframes plusPop{0%{transform:translate(-50%,-50%) scale(.3);opacity:0}25%{transform:translate(-50%,-50%) scale(1.25);opacity:1}
+  70%{transform:translate(-50%,-80%) scale(1);opacity:1}100%{transform:translate(-50%,-130%) scale(.9);opacity:0}}
+.bump{animation:bump .45s ease-out}
+@keyframes bump{40%{transform:scale(1.3)}}
 /* message */
 #msg{width:var(--B);min-height:30px;text-align:center;font-size:14px;font-weight:700;text-shadow:0 1px 3px #0008;
   display:flex;flex-direction:column;align-items:center;gap:4px}
@@ -197,12 +259,20 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
 <div id="top">
   <button id="back" aria-label="Leave game"><svg viewBox="0 0 32 32"><path d="M19 6 9 16l10 10M10 16h15" fill="none" stroke="#6fb6ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="chatBtn" aria-label="Chat" onclick="openChat()" style="margin-left:auto;margin-right:4px;display:none;position:relative"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M5 6h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H14l-6 5v-5H5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z"/><circle cx="10" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="16" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="22" cy="14.5" r="2" fill="#1b2a7a"/></svg><b id="chatBadge"></b></button>
+  <button id="snd" aria-label="Sound on or off" onclick="toggleSound()" style="margin-right:6px"></button>
   <button id="menu" aria-label="Settings"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></button>
 </div>
 <div class="row" id="topRow"></div>
 <div id="wrap"><div id="board"></div><div id="tokens"></div></div>
 <div class="row" id="botRow"></div>
 <div id="msg" aria-live="polite"></div>
+<div id="chat" hidden>
+  <div class="chead"><b>Chat</b><button onclick="closeChat()" aria-label="Close chat">✕</button></div>
+  <div id="clog"></div>
+  <div class="quick"></div>
+  <div class="cin"><input id="ctext" maxlength="120" placeholder="Type a message" enterkeyhint="send"><button onclick="sendChat()">Send</button></div>
+</div>
 <script>
 /* ---------- geometry ---------- */
 const TRACK=[];const P=(r,c)=>TRACK.push([r,c]);
@@ -235,15 +305,19 @@ const YARD=[[0,0],[9,0],[9,9],[0,9]];           // x,y of yard corner
 const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
-const MIN_PER_TYPE=1,MAX_PER_TYPE=3,MAX_HELD=3,STEP=150;
-// a six comes more often than on a fair die: weights 1,1,1,1,1,2 -> P(6) = 2/7 = 28.6% (about 1 roll in 3.5)
+// after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
+const ITEM_COUNTS=[3,3,4,4,5],MAX_HELD=3,STEP=280;   // ms per square a token moves
+// Six weighting: base weights 1,1,1,1,1,2 -> P(6) = 2/7 = 28.6%.
+// Fairness boost: after 3 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
+// (dry 4 -> 3.5/8.5 = 41%, dry 6 -> 6.5/11.5 = 57%, dry 8 -> 9.5/14.5 = 66%), so nobody waits forever.
 const ROLL_WEIGHTS=[1,1,1,1,1,2];
 let SPEED=1;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*SPEED));
 const $=id=>document.getElementById(id);
-function rollDie(){
-  const tot=ROLL_WEIGHTS.reduce((a,b)=>a+b,0);let x=Math.random()*tot;
-  for(let i=0;i<6;i++){x-=ROLL_WEIGHTS[i];if(x<0)return i+1;}return 6;
+function rollDie(dry=0){
+  const w=ROLL_WEIGHTS.slice();w[5]+=Math.max(0,dry-3)*1.5;
+  const tot=w.reduce((a,b)=>a+b,0);let x=Math.random()*tot;
+  for(let i=0;i<6;i++){x-=w[i];if(x<0)return i+1;}return 6;
 }
 
 /* ---------- state ---------- */
@@ -275,11 +349,11 @@ function occupied(idx){
   return S.players.some(p=>p.tokens.some(g=>g>=0&&g<=50&&cellOf(p,g)===idx));
 }
 // Items of one type stay where they are until ANY ONE of them is collected.
-// Then every item of that type is cleared and scattered again with a new random count (1-3).
+// Then every item of that type is cleared and scattered again with a new random count (3-5).
 function refreshItems(type){
   if(!S.itemsOn)return;
   for(const k in S.items)if(S.items[k]===type)delete S.items[k];
-  const n=MIN_PER_TYPE+Math.floor(Math.random()*(MAX_PER_TYPE-MIN_PER_TYPE+1));
+  const n=ITEM_COUNTS[Math.floor(Math.random()*ITEM_COUNTS.length)];
   let placed=0,tries=0;
   while(placed<n&&tries++<300){
     const idx=Math.floor(Math.random()*52);
@@ -289,8 +363,8 @@ function refreshItems(type){
 }
 
 /* ---------- rules ---------- */
-// A fence stops opponents on the square just before it. It is never broken by being reached;
-// it simply disappears when its owner's next turn starts.
+// A fence stops EVERY token (its owner's too) on the square just before it. It is never broken by being
+// reached; it simply disappears when its owner's next turn starts.
 function simulate(pi,ti,v){
   const p=S.players[pi],g=p.tokens[ti];
   if(g===56)return null;
@@ -299,7 +373,7 @@ function simulate(pi,ti,v){
   const path=[];let blocked=false;
   for(let s=g+1;s<=g+v;s++){
     if(s<=50){const f=S.fences[cellOf(p,s)];
-      if(f!==undefined&&f!==pi){blocked=true;break;}}
+      if(f!==undefined){blocked=true;break;}}
     path.push(s);
   }
   if(!path.length)return null;        // fence right in front: this token cannot move
@@ -336,9 +410,9 @@ function nextTurn(bonus){
 async function doRoll(){
   if(S.phase!=='roll')return;
   S.phase='anim';S.rolling=true;
-  for(let k=0;k<7;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(60);}
-  S.rolling=false;const v=rollDie();
-  S.roll=v;S.chosen=false;cur().last=v;
+  for(let k=0;k<8;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(75);}
+  S.rolling=false;const v=rollDie(cur().dry||0);
+  S.roll=v;S.chosen=false;cur().last=v;cur().dry=v===6?0:(cur().dry||0)+1;
   if(v===6){S.sixes++;
     if(S.sixes===3){S.msg='Three sixes in a row, turn lost.';render();await sleep(1100);S.msg='';nextTurn(false);return;}
   }else S.sixes=0;
@@ -354,7 +428,7 @@ async function afterValue(){
   S.moves=moves;S.phase='move';render();
   if(cur().type==='cpu'){await sleep(450);const m=botPick(pi,moves);doMove(pi,m.ti,m.sim);return;}
   const distinct=new Set(moves.map(m=>cur().tokens[m.ti]));
-  if(distinct.size===1){await sleep(380);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
+  if(distinct.size===1){await sleep(500);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
 }
 async function doMove(pi,ti,sim){
   if(S.phase!=='move')return;
@@ -368,10 +442,11 @@ async function doMove(pi,ti,sim){
   const end=p.tokens[ti];
   if(end>=0&&end<=50){const idx=cellOf(p,end),it=S.items[idx];
     if(it){delete S.items[idx];
-      if(it==='dice'){if(p.dice<MAX_HELD)p.dice++;notes.push('collected a dice card');}
+      if(it==='dice'){if(p.dice<MAX_HELD)p.dice++;notes.push('collected a dice');}
       else if(it==='fence'){if(p.fence<MAX_HELD)p.fence++;notes.push('collected a fence');}
-      else{bonus=true;notes.push('hit +1, extra roll');}
-      refreshItems(it);render();}}
+      else{bonus=true;notes.push('got +1, extra roll');}
+      S.fx={id:Math.random().toString(36).slice(2),kind:it,idx,pi};
+      refreshItems(it);render();await sleep(750);}}
   const g=p.tokens[ti];
   if(g<=50){const idx=cellOf(p,g);
     if(!SAFE.has(idx)){S.players.forEach((q,qi)=>{if(qi===pi)return;
@@ -412,7 +487,7 @@ function botScore(pi,m){
 }
 function botPick(pi,moves){return moves.reduce((a,b)=>botScore(pi,b)>botScore(pi,a)?b:a);}
 async function botTurn(){
-  const pi=S.turn;await sleep(550);
+  const pi=S.turn;await sleep(750);
   if(S.turn!==pi||S.phase!=='roll')return;
   const p=cur();
   if(p.fence>0&&!S.fenceUsed&&Math.random()<.7){
@@ -510,7 +585,7 @@ function buildBoard(){
     const d=add('cell'+((r+c)%2?' alt':''),`grid-row:${r+1};grid-column:${c+1}`);
     if(idx%13===0){d.classList.add('path');d.style.setProperty('--pc',COLORS[idx/13].path);}
     if(SAFE.has(idx))d.innerHTML=STAR;
-    d.onclick=()=>placeFence(idx);trackCells[idx]=d;});
+    d.onclick=()=>selectFence(idx);trackCells[idx]=d;});
   HOME.forEach((cells,c)=>cells.forEach(([r0,c0])=>{const[r,cc]=rotRC(r0,c0);add('cell path',`grid-row:${r+1};grid-column:${cc+1};--pc:${COLORS[c].path}`);}));
   add('center',`grid-row:7/span 3;grid-column:7/span 3;transform:rotate(${VR*90}deg)`,CENTER_SVG());
   // wooden bridges between each nest and the track
@@ -531,7 +606,10 @@ function tapDie(pi){if(mine(pi)&&S.phase==='roll')doRoll();}
 function tapPick(pi){if(!mine(pi))return;if(S.phase==='choose'){S.phase='roll';render();}else if(S.phase==='roll'&&cur().dice){S.phase='choose';render();}}
 function tapFence(pi){if(!mine(pi))return;if(S.phase==='fence'){S.phase='roll';render();}
   else if(S.phase==='roll'&&cur().fence&&!S.fenceUsed){S.phase='fence';render();}}
-function cancelMode(){if(S.phase==='choose'||S.phase==='fence'){S.phase='roll';render();}}
+let pendingFence=null;
+function selectFence(idx){if(!S||S.phase!=='fence'||!mine(S.turn)||!canFence(idx))return;pendingFence=idx;render();}
+function confirmFence(ok){const idx=pendingFence;pendingFence=null;if(ok&&idx!==null)placeFence(idx);else render();}
+function cancelMode(){pendingFence=null;if(S.phase==='choose'||S.phase==='fence'){S.phase='roll';render();}}
 
 function cornerHTML(c){
   const pos=screenCorner(c),cls=(pos[0]==='t'?'t ':'')+(pos[1]==='r'?'r':'');
@@ -544,13 +622,15 @@ function cornerHTML(c){
   if(on&&S.chosen)dcls+=' chosen';
   if(canAct){face='<span class="go">go</span>';dcls+=' go';}
   else face=pips(on&&S.roll?S.roll:0);
-  const bub=(kind,n,icon,fn,live,usable)=>`<button class="bub ${n?'':'zero'} ${live?'live':''}" onclick="${fn}(${pi})" ${usable?'':'disabled'}
+  const bub=(kind,n,icon,fn,live,usable)=>`<button class="bub ${n?'':'zero'} ${live?'live':''}" data-bub="${fn==='tapPick'?'dice':'fence'}-${pi}" onclick="${fn}(${pi})" ${usable?'':'disabled'}
      aria-label="${kind}, ${n} left">${icon}${n?`<b>${n}</b>`:''}</button>`;
   return `<div class="corner ${cls} ${p.done?'out':on?'on':''}">
-    <div class="prow"><div class="ava"><i>${PERSON}</i>${p.type==='cpu'?'<span class="bot">🤖</span>':''}</div>
+    <div class="prow"><div class="ava ${emotePick&&emotePick.from!==pi?'target':''} ${avaFx[pi]&&avaFx[pi].until>Date.now()?avaFx[pi].cls:''}" data-ava="${pi}" onclick="tapAva(${pi})"><i>${PERSON}</i>${p.type==='cpu'?'<span class="bot">🤖</span>':''}</div>
       <button class="${dcls}" onclick="tapDie(${pi})" aria-label="Roll the dice">${face}</button></div>
+    ${trayFor===pi?`<div class="tray">${THROWS.map(t=>`<button onclick="pickThrow(${pi},'${t.k}')" aria-label="${t.name}">${t.e}</button>`).join('')}</div>`:''}
     <div class="brow ${ONLINE&&!ctl?'hidden':''}">${bub('Pick a number',p.dice,DIE_SVG,'tapPick',on&&S.phase==='choose',canAct&&p.dice||on&&ctl&&S.phase==='choose')}
-      ${bub('Place a fence',p.fence,FENCE_SVG,'tapFence',on&&S.phase==='fence',canAct&&p.fence&&!S.fenceUsed||on&&ctl&&S.phase==='fence')}</div>
+      ${bub('Place a fence',p.fence,FENCE_SVG,'tapFence',on&&S.phase==='fence',canAct&&p.fence&&!S.fenceUsed||on&&ctl&&S.phase==='fence')}
+      ${canThrow(pi)?`<button class="bub emo ${trayFor===pi?'live':''}" onclick="toggleTray(${pi})" aria-label="Throw something at a player"><span>🥥</span></button>`:''}</div>
   </div>`;
 }
 
@@ -569,7 +649,18 @@ function render(){
         f.style.setProperty('--fcol',COLORS[S.players[S.fences[idx]].color].css);f.innerHTML=FENCE_SVG;d.appendChild(f);}
       else if(S.items[idx]){const s=document.createElement('span');const t=S.items[idx];
         s.className='it '+t+(fresh.has(idx)?' new':'');s.innerHTML=t==='dice'?DIE_SVG:t==='fence'?FENCE_TILE:PLUS_TILE;d.appendChild(s);}}
-    d.classList.toggle('pick',S.phase==='fence'&&human&&canFence(idx));});
+    d.classList.toggle('pick',S.phase==='fence'&&human&&canFence(idx));
+    d.classList.toggle('chosenF',pendingFence===idx);
+    const gh=d.querySelector('.ghost');if(pendingFence===idx&&!gh){const g=document.createElement('span');g.className='ghost';g.innerHTML=FENCE_SVG;d.appendChild(g);}
+    else if(pendingFence!==idx&&gh)gh.remove();});
+  // tick / cross for the fence square picked
+  if(S.phase!=='fence')pendingFence=null;
+  const oc=$('fconfirm');if(oc)oc.remove();
+  if(pendingFence!==null&&human){const[r,c]=rotRC(...TRACK[pendingFence]);const box=document.createElement('div');box.id='fconfirm';
+    const below=r<2;box.className=below?'below':'';
+    box.style.left=(c+.5)/15*100+'%';box.style.top=(below?r+1:r)/15*100+'%';
+    box.innerHTML=`<button class="ok" onclick="confirmFence(true)" aria-label="Place fence here">✓</button><button class="no" onclick="confirmFence(false)" aria-label="Choose another square">✕</button>`;
+    $('wrap').appendChild(box);}
   // tokens (stacked ones shrink and fan out)
   const groups={};
   tokEls.forEach(t=>{const xy=rotXY(...tokenXY(S.players[t.pi],t.ti));const k=xy.join(',');(groups[k]=groups[k]||[]).push({t,xy});});
@@ -598,13 +689,123 @@ function render(){
   else if(!human)m=p.type==='human'?`Waiting for ${esc(p.name)}…`:`${esc(p.name)} is playing…`;
   else if(S.phase==='roll')m=`${esc(p.name)}, tap go`;
   else if(S.phase==='move')m=`Move ${S.roll}: tap a hopping token`;
-  else if(S.phase==='fence')m=`Tap a flashing square for your fence <button class="cancel" onclick="cancelMode()">Cancel</button>`;
+  else if(S.phase==='fence')m=(pendingFence===null?'Tap a flashing square for your fence':'✓ to place the fence here, ✕ to pick another square')+` <button class="cancel" onclick="cancelMode()">Cancel</button>`;
   else if(S.phase==='choose')m='&nbsp;';
+  if(emotePick)m='Tap the player you want to hit';
   $('msg').innerHTML=(m||'&nbsp;')+sub;
+  if(S.fx&&S.fx.id!==lastFx){lastFx=S.fx.id;const fx=S.fx;(window.requestAnimationFrame||setTimeout)(()=>playFx(fx));}
   if(ONLINE&&!applyingRemote)pushState();
 }
+/* flying pickup: dice/fence fly into the player's bubble, +1 flies to the player's nest */
+let lastFx=null;
+function playFx(fx){
+  if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  if(!document.body.animate)return;
+  const from=trackCells[fx.idx];if(!from)return;
+  const a=from.getBoundingClientRect();
+  let target=fx.kind==='plus'?$('nest'+S.players[fx.pi].color):document.querySelector(`[data-bub="${fx.kind}-${fx.pi}"]`);
+  if(!target||target.closest('.hidden'))target=document.querySelector(`[data-ava="${fx.pi}"]`);
+  if(!target)return;
+  const b=target.getBoundingClientRect();
+  const el=document.createElement('div');el.className='fly';
+  el.innerHTML=fx.kind==='dice'?DIE_SVG:fx.kind==='fence'?FENCE_TILE:PLUS_TILE;
+  const size=a.width*1.3;
+  Object.assign(el.style,{left:(a.left+a.width/2-size/2)+'px',top:(a.top+a.height/2-size/2)+'px',width:size+'px',height:size+'px'});
+  document.body.appendChild(el);
+  const dx=b.left+b.width/2-(a.left+a.width/2),dy=b.top+b.height/2-(a.top+a.height/2);
+  const end=fx.kind==='plus'?2.2:Math.min(1.1,b.width/size);
+  el.animate([{transform:'translate(0,0) scale(1)'},{transform:`translate(${dx*.5}px,${dy*.5-60}px) scale(1.6)`,offset:.45},
+    {transform:`translate(${dx}px,${dy}px) scale(${end})`,opacity:fx.kind==='plus'?1:.3}],
+    {duration:700,easing:'cubic-bezier(.4,0,.3,1)'}).onfinish=()=>{
+      el.remove();
+      if(fx.kind==='plus'){const t=document.createElement('div');t.className='plusPop';t.textContent='+1';
+        Object.assign(t.style,{left:(b.left+b.width/2)+'px',top:(b.top+b.height/2)+'px'});document.body.appendChild(t);
+        setTimeout(()=>t.remove(),1100);}
+      else{const n=document.querySelector(`[data-bub="${fx.kind}-${fx.pi}"]`)||document.querySelector(`[data-ava="${fx.pi}"]`);
+        if(n){n.classList.remove('bump');void n.offsetWidth;n.classList.add('bump');}}};
+}
+/* ---------- throwables ---------- */
+const THROWS=[{k:'coconut',e:'🥥',name:'Coconut'},{k:'cactus',e:'🌵',name:'Cactus'},{k:'tomato',e:'🍅',name:'Tomato'},
+  {k:'bomb',e:'💣',name:'Bomb'},{k:'heart',e:'❤️',name:'Heart'}];
+let trayFor=null,emotePick=null,soundOn=true;const avaFx={};
+try{soundOn=localStorage.getItem('ludoSound')!=='off';}catch(e){}
+const canThrow=pi=>S&&S.phase!=='over'&&S.players[pi].type==='human'&&(ONLINE?S.players[pi].uid===ONLINE.myId:true)&&S.players.length>1;
+function toggleTray(pi){trayFor=trayFor===pi?null:pi;emotePick=null;render();}
+function pickThrow(from,k){trayFor=null;
+  const foes=S.players.map((_,i)=>i).filter(i=>i!==from);
+  if(foes.length===1){sendThrow(from,foes[0],k);emotePick=null;render();}
+  else{emotePick={from,k};render();}}
+function tapAva(pi){if(!emotePick||pi===emotePick.from)return;const{from,k}=emotePick;emotePick=null;render();sendThrow(from,pi,k);}
+function sendThrow(from,to,k){
+  if(ONLINE)ONLINE.ref.child('throws').push({from,to,k,t:Date.now(),by:ONLINE.myId});
+  playThrow(from,to,k);
+  // the computer sometimes throws something back
+  if(S.players[to].type==='cpu'&&Math.random()<.45)setTimeout(()=>{if(S)playThrow(to,from,THROWS[Math.floor(Math.random()*THROWS.length)].k);},1500);
+}
+function playThrow(from,to,k){
+  const a=document.querySelector(`[data-ava="${from}"]`),b=document.querySelector(`[data-ava="${to}"]`);if(!a||!b)return;
+  const A=a.getBoundingClientRect(),B=b.getBoundingClientRect(),t=THROWS.find(x=>x.k===k)||THROWS[0];
+  const el=document.createElement('div');el.className='proj';el.textContent=t.e;
+  Object.assign(el.style,{left:A.left+A.width/2+'px',top:A.top+A.height/2+'px'});document.body.appendChild(el);
+  const dx=B.left+B.width/2-(A.left+A.width/2),dy=B.top+B.height/2-(A.top+A.height/2);
+  const spin=k==='heart'?0:720,lift=Math.max(90,Math.abs(dx)*.35);
+  const done=()=>{el.remove();impact(to,k);};
+  if(!el.animate){done();return;}
+  el.animate([{transform:'translate(-50%,-50%) rotate(0) scale(.7)'},
+    {transform:`translate(calc(-50% + ${dx/2}px),calc(-50% + ${dy/2-lift}px)) rotate(${spin/2}deg) scale(1.5)`,offset:.5},
+    {transform:`translate(calc(-50% + ${dx}px),calc(-50% + ${dy}px)) rotate(${spin}deg) scale(1.1)`}],
+    {duration:850,easing:'cubic-bezier(.35,0,.65,1)'}).onfinish=done;
+}
+function impact(to,k){
+  const b=document.querySelector(`[data-ava="${to}"]`);if(!b)return;const B=b.getBoundingClientRect();
+  const cx=B.left+B.width/2,cy=B.top+B.height/2;
+  const burst=(txt,n,spread,cls)=>{for(let i=0;i<n;i++){const s=document.createElement('div');s.className='burst '+(cls||'');s.textContent=txt;
+    const ang=Math.random()*Math.PI*2,d=spread*(.5+Math.random()*.6);
+    s.style.left=cx+'px';s.style.top=cy+'px';s.style.setProperty('--dx',Math.cos(ang)*d+'px');s.style.setProperty('--dy',Math.sin(ang)*d-(cls==='rise'?50:0)+'px');
+    document.body.appendChild(s);setTimeout(()=>s.remove(),1300);}};
+  const mark=(cls,ms)=>{avaFx[to]={cls,until:Date.now()+ms};b.classList.remove(cls);void b.offsetWidth;b.classList.add(cls);
+    setTimeout(()=>{const n=document.querySelector(`[data-ava="${to}"]`);if(n)n.classList.remove(cls);},ms);};
+  if(k==='heart'){burst('❤️',7,55,'rise');mark('loved',1200);sfx('heart');return;}
+  mark('hit',600);
+  if(k==='coconut'){burst('💥',1,0);burst('🥥',3,45);sfx('coconut');}
+  if(k==='cactus'){burst('💢',2,30);burst('🌵',2,40);sfx('cactus');}
+  if(k==='tomato'){burst('🍅',4,40);const sp=document.createElement('div');sp.className='splat';
+    Object.assign(sp.style,{left:B.left-6+'px',top:B.top-6+'px',width:B.width+12+'px',height:B.height+12+'px'});document.body.appendChild(sp);setTimeout(()=>sp.remove(),1600);sfx('tomato');}
+  if(k==='bomb'){burst('💥',3,35);burst('💨',3,55);sfx('bomb');}
+}
+/* sounds are synthesised, so there are no sound files to download */
+let actx=null;
+function sfx(kind){
+  if(!soundOn)return;
+  try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();}catch(e){return;}
+  const t0=actx.currentTime;
+  if(!actx.comp){actx.comp=actx.createDynamicsCompressor();actx.comp.threshold.value=-10;actx.comp.ratio.value=4;actx.comp.connect(actx.destination);}
+  const out=actx.comp;
+  const tone=(f,start,dur,type='sine',vol=.5,f2)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type;
+    o.frequency.setValueAtTime(f,t0+start);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+start+dur);
+    g.gain.setValueAtTime(vol,t0+start);g.gain.exponentialRampToValueAtTime(.001,t0+start+dur);o.connect(g).connect(out);o.start(t0+start);o.stop(t0+start+dur+.02);};
+  const noise=(start,dur,vol,freq,q=1)=>{const n=actx.createBufferSource(),buf=actx.createBuffer(1,actx.sampleRate*dur,actx.sampleRate),d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;const f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
+    const g=actx.createGain();g.gain.setValueAtTime(vol,t0+start);g.gain.exponentialRampToValueAtTime(.001,t0+start+dur);n.connect(f).connect(g).connect(out);n.start(t0+start);};
+  if(kind==='whoosh')noise(0,.45,.25,900,.8);
+  if(kind==='coconut'){tone(210,0,.18,'sine',.8,120);tone(190,.22,.18,'sine',.8,110);noise(0,.06,.4,2500);}       // dum dum
+  if(kind==='cactus'){[0,.17,.34].forEach(d=>{tone(160,d,.16,'sine',.9,55);noise(d,.05,.35,1200,1.5);});} // dham dham dham
+  if(kind==='tomato'){noise(0,.3,.7,500,.6);tone(140,0,.2,'sine',.4,60);}
+  if(kind==='bomb'){
+    noise(0,.12,1,2500,.7);                          // sharp crack
+    tone(120,0,1.1,'sine',1,28);tone(70,0,1.3,'sine',.9,22);  // deep thump
+    noise(0,1.6,1,140,.4);noise(.05,1.2,.8,320,.6);  // blast and rumble
+    noise(.35,.9,.35,90,.5);                         // tail
+  }
+  if(kind==='heart'){tone(660,0,.25,'sine',.35);tone(880,.15,.25,'sine',.35);tone(1320,.3,.45,'sine',.3);}
+}
+function toggleSound(){soundOn=!soundOn;try{localStorage.setItem('ludoSound',soundOn?'on':'off');}catch(e){}
+  $('snd').innerHTML=soundOn?SND_ON:SND_OFF;if(soundOn)sfx('heart');}
+const SND_ON='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M4 12h6l8-7v22l-8-7H4z"/><path d="M22 11a7 7 0 0 1 0 10M25.5 7.5a12 12 0 0 1 0 17" stroke="#6fb6ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
+const SND_OFF='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M4 12h6l8-7v22l-8-7H4z"/><path d="M22 12l8 8M30 12l-8 8" stroke="#6fb6ff" stroke-width="3" stroke-linecap="round"/></svg>';
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 buildDefs();
+$('snd').innerHTML=soundOn?SND_ON:SND_OFF;
 
 /* ---------- screens ---------- */
 function showSetup(){
@@ -658,9 +859,44 @@ function pushState(){
   if(!ONLINE||!S)return;
   ONLINE.ref.child('state').set({json:JSON.stringify(S),writer:myId});
 }
+/* ---------- chat (online games only) ---------- */
+const QUICK=['Nice move! 👍','😂😂','Hurry up! ⏳','Oops 😅','Good game 🤝','Not fair! 😤'];
+let unread=0;
+function chatVisible(on){$('chatBtn').style.display=on?'':'none';if(!on){closeChat();$('clog').innerHTML='';unread=0;badge();}}
+function badge(){const b=$('chatBadge');b.textContent=unread>9?'9+':unread||'';b.style.display=unread?'':'none';}
+function openChat(){$('chat').hidden=false;unread=0;badge();$('clog').scrollTop=1e6;}
+function closeChat(){$('chat').hidden=true;}
+function sendChat(text){
+  text=(text??$('ctext').value).trim().slice(0,120);if(!text||!ONLINE||!S)return;
+  const me=S.players.find(p=>p.uid===ONLINE.myId);
+  ONLINE.ref.child('chat').push({by:myId,name:me?me.name:myName,color:me?me.color:3,text,t:Date.now()});
+  $('ctext').value='';
+}
+function showChat(v){
+  const row=document.createElement('div');row.className='cm'+(v.by===myId?' mine':'');
+  row.innerHTML=`<span style="color:${COLORS[v.color]?COLORS[v.color].css:'#888'}">${esc(v.name)}</span>${esc(v.text)}`;
+  $('clog').appendChild(row);$('clog').scrollTop=1e6;
+  if($('chat').hidden&&v.by!==myId){unread++;badge();}
+  // a speech bubble also pops up next to the sender's avatar
+  const pi=S?S.players.findIndex(p=>p.uid===v.by):-1,a=document.querySelector(`[data-ava="${pi}"]`);
+  if(a&&v.by!==myId){const r=a.getBoundingClientRect(),sp=document.createElement('div');sp.className='speech';sp.textContent=v.text;
+    const top=r.top<innerHeight/2;Object.assign(sp.style,{left:Math.min(Math.max(r.left+r.width/2,90),innerWidth-90)+'px',
+      top:(top?r.bottom+8:r.top-8)+'px',transform:`translate(-50%,${top?'0':'-100%'})`});
+    document.body.appendChild(sp);setTimeout(()=>sp.remove(),3500);sfx('heart');}
+}
+function listenChat(ref){
+  $('clog').innerHTML='';unread=0;badge();chatVisible(true);
+  const since=Date.now()-60*60*1000;   // show the last hour of messages in this room
+  ref.child('chat').on('child_added',snap=>{const v=snap.val();if(v&&v.t>since)showChat(v);});
+}
+function listenThrows(ref){
+  const since=Date.now()-1000;
+  ref.child('throws').on('child_added',snap=>{const v=snap.val();
+    if(!v||v.by===myId||v.t<since||!S)return;playThrow(v.from,v.to,v.k);});
+}
 function leaveRoom(){
   if(!ONLINE)return;
-  ONLINE.ref.child('state').off();ONLINE.ref.child('seats').off();
+  ONLINE.ref.child('state').off();ONLINE.ref.child('seats').off();ONLINE.ref.child('throws').off();ONLINE.ref.child('chat').off();chatVisible(false);
   ONLINE=null;
 }
 function onRemoteState(snap){
@@ -728,7 +964,7 @@ function showOnline(){
       seats[c]={type:t,name:t==='host'?myName:t==='cpu'?COLORS[c].name:'',uid:t==='host'?myId:''};});
     await ref.set({meta:{n:host.n,items:host.items,host:myId,created:Date.now()},seats});
     ONLINE={code,ref,myId,isHost:true};
-    ref.child('state').on('value',onRemoteState);
+    ref.child('state').on('value',onRemoteState);listenThrows(ref);listenChat(ref);
     ref.child('seats').on('value',snap=>lobby(snap.val()||{}));
   }
 
@@ -746,7 +982,7 @@ function showOnline(){
       return;});
     if(!res.committed||mySeat===null){jerr.textContent='This room is full or the game has already started.';return;}
     ONLINE={code,ref,myId,isHost:false};
-    ref.child('state').on('value',onRemoteState);
+    ref.child('state').on('value',onRemoteState);listenThrows(ref);listenChat(ref);
     ref.child('seats').on('value',snap=>lobby(snap.val()||{}));
   }
 
@@ -779,6 +1015,9 @@ function showOnline(){
 function toMenu(){if(document.getElementById('setup')||document.getElementById('online'))return;
   if(S&&S.phase!=='over'&&!document.getElementById('winov')&&!confirm('Leave this game?'))return;
   document.querySelectorAll('.ov').forEach(o=>o.remove());leaveRoom();showSetup();}
+document.querySelector('#chat .quick').innerHTML=QUICK.map(q=>`<button onclick="sendChat(this.textContent)">${q}</button>`).join('');
+$('ctext').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
+$('chatBadge').style.display='none';
 $('menu').onclick=toMenu;$('back').onclick=toMenu;
 showSetup();
 </script>
