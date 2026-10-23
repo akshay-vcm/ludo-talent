@@ -21,129 +21,158 @@ const FIREBASE_CONFIG = {
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <style>
 :root{
-  --sky1:#5fc0ff; --sky2:#1d63d6; --sky3:#123a96; --ink:#ffffff; --muted:#d7e8ff;
   --card:#ffffff; --cardInk:#203040; --cardMuted:#61707f; --chip:#eef3f8;
-  --grass:#b7df47; --grass2:#a6d23a; --grassLine:rgba(70,120,20,.35); --island:#94c931; --dirt:#8c5a2b;
-  --blue:#2f95ea; --blueD:#1f6fc0; --red:#ec4630; --redD:#b92e1e;
-  --green:#1fa564; --greenD:#127346; --yellow:#f6b417; --yellowD:#d5850d;
-  --wood:#e08a3a; --woodD:#9a5420;
+  --grass:#cfeb68; --grass2:#bddf52; --grassLine:rgba(70,125,15,.45); --island:#a4d23f; --dirt:#8a5527;
+  --red:#e8433a; --green:#1f8f55; --yellow:#f5cf1d; --blue:#3a7fe6;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --sky1:#2a5fa8; --sky2:#122f6e; --sky3:#081633; --muted:#a9c2e6;
-    --card:#1b2a3d; --cardInk:#e9f0f8; --cardMuted:#9cb0c6; --chip:#26384e; color-scheme: dark; }
+  :root{ --card:#1b2a3d; --cardInk:#e9f0f8; --cardMuted:#9cb0c6; --chip:#26384e; color-scheme: dark; }
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;min-height:100%;color:var(--ink);
+html,body{margin:0;min-height:100%;color:#fff;
   font-family:ui-rounded,"SF Pro Rounded","Nunito","Segoe UI",system-ui,sans-serif;}
-body{min-height:100svh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
-  padding:max(10px,env(safe-area-inset-top)) 8px 14px;overflow-x:hidden;
+body{min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:max(6px,env(safe-area-inset-top)) 4px 10px;overflow-x:hidden;
   background:
-   radial-gradient(1.5px 1.5px at 12% 18%,#fff9 50%,transparent),radial-gradient(1.5px 1.5px at 82% 12%,#fff8 50%,transparent),
-   radial-gradient(1px 1px at 70% 80%,#fff9 50%,transparent),radial-gradient(1.5px 1.5px at 22% 86%,#fff7 50%,transparent),
-   radial-gradient(1px 1px at 92% 55%,#fff9 50%,transparent),radial-gradient(1px 1px at 6% 50%,#fff8 50%,transparent),
-   radial-gradient(120% 80% at 50% 45%,var(--sky1) 0,var(--sky2) 55%,var(--sky3) 100%) fixed;}
+   radial-gradient(1.6px 1.6px at 12% 22%,#fff 50%,transparent),radial-gradient(1.2px 1.2px at 78% 9%,#fffc 50%,transparent),
+   radial-gradient(1.4px 1.4px at 63% 31%,#fffb 50%,transparent),radial-gradient(1px 1px at 30% 64%,#fffa 50%,transparent),
+   radial-gradient(1.6px 1.6px at 88% 72%,#fff 50%,transparent),radial-gradient(1.2px 1.2px at 8% 90%,#fffb 50%,transparent),
+   radial-gradient(1px 1px at 47% 96%,#fffa 50%,transparent),radial-gradient(1.3px 1.3px at 95% 40%,#fffc 50%,transparent),
+   radial-gradient(60% 20% at 85% 95%,#b9a6ff33,transparent),radial-gradient(50% 18% at 10% 98%,#a6c0ff33,transparent),
+   linear-gradient(180deg,#1b2a7a 0%,#2c3d9e 35%,#4a4fb8 75%,#6a5cc4 100%) fixed;}
 button{font:inherit;color:inherit;cursor:pointer;border:none;background:none;padding:0}
-button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:8px}
-:root{--B:min(96vw,calc(100svh - 230px),560px);--u:calc(var(--B)/15)}
+button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10px}
+:root{--B:min(calc(100vw - 4px),calc(100svh - 250px),620px);--u:calc(var(--B)/15)}
 
-/* corner player panels */
-.row{width:var(--B);display:flex;justify-content:space-between;gap:8px}
-.corner{display:flex;align-items:center;gap:8px;min-width:0;flex:1;transition:opacity .2s}
-.corner.r{flex-direction:row-reverse;text-align:right}
+/* top bar */
+#top{width:min(100%,600px);display:flex;justify-content:space-between;align-items:center;padding:0 6px}
+#top button{width:38px;height:38px;display:grid;place-items:center}
+#top svg{width:28px;height:28px;filter:drop-shadow(0 2px 2px #0006)}
+
+/* player corners */
+.row{width:var(--B);display:flex;justify-content:space-between;align-items:flex-start;min-height:96px;padding:0 4px}
+#botRow{align-items:flex-end}
+.corner{display:flex;flex-direction:column;gap:8px;align-items:flex-start;transition:opacity .25s}
+.corner.t{flex-direction:column-reverse}
+.corner.r{align-items:flex-end}
 .corner.empty{visibility:hidden}
-.corner.idle{opacity:.6}
-.corner.out{opacity:.4}
-.who{min-width:0;display:flex;flex-direction:column;gap:3px}
-.corner.r .who{align-items:flex-end}
-.nm{display:flex;align-items:center;gap:6px;font-weight:800;font-size:14px;text-shadow:0 1px 2px #0005;white-space:nowrap}
-.corner.r .nm{flex-direction:row-reverse}
-.ava{width:26px;height:26px;border-radius:50%;background:var(--pc);border:2.5px solid #fff;display:grid;place-items:center;
-  font-size:12px;font-weight:900;color:#fff;flex:none;box-shadow:0 2px 0 #0003}
-.inv{display:flex;gap:5px}
-.corner.r .inv{flex-direction:row-reverse}
-.chipb{display:flex;align-items:center;gap:3px;background:#ffffff26;border-radius:999px;padding:3px 8px 3px 4px;
-  font-weight:800;font-size:13px;color:#fff;border:1.5px solid #ffffff40}
-.chipb svg{width:18px;height:18px}
-.chipb:disabled{opacity:.55;cursor:default}
-.chipb.live{background:#fff;color:var(--cardInk);border-color:#fff;box-shadow:0 0 0 3px #ffe06a}
-.home{font-size:12px;color:var(--muted);font-weight:700}
-.bigdie{width:58px;height:58px;flex:none;border-radius:14px;background:#fff;padding:8px;display:grid;
-  grid-template:repeat(3,1fr)/repeat(3,1fr);box-shadow:0 5px 0 #c3cfdb,0 8px 14px #0003;transition:transform .15s}
-.bigdie i{border-radius:50%;margin:2px}
-.bigdie i.on{background:#203a73}
-.bigdie.chosen i.on{background:#d8860d}
-.bigdie.go{animation:bob 1s ease-in-out infinite;box-shadow:0 5px 0 #c3cfdb,0 0 0 4px #ffe06a,0 0 22px 6px #ffe06a99}
-.bigdie.spin{animation:spin .3s linear infinite}
+.corner.out{opacity:.45}
+.prow{display:flex;align-items:center;gap:12px}
+.corner.r .prow{flex-direction:row-reverse}
+.brow{display:flex;gap:7px;background:#0c1550aa;padding:4px 8px;border-radius:999px}
+.brow.hidden{visibility:hidden}
+.ava{width:46px;height:46px;border-radius:50%;border:3.5px solid #5fe3a1;background:radial-gradient(circle at 50% 35%,#e6b9a3,#b9846c);
+  display:grid;place-items:center;position:relative;box-shadow:0 0 0 2px #0d3d2a55,0 3px 8px #0005}
+.ava i{position:absolute;inset:0;border-radius:50%;overflow:hidden;display:grid;place-items:center}
+.ava svg{width:78%;height:78%;margin-top:22%}
+.ava .bot{position:absolute;right:-2px;bottom:-2px;font-size:16px}
+.corner.on .ava{border-color:#ffe066;box-shadow:0 0 0 3px #ffe06655,0 0 18px #ffe066aa}
+
+/* the big dice */
+.bigdie{width:42px;height:42px;border-radius:10px;position:relative;display:block;padding:5px;
+  background:linear-gradient(160deg,#ffffff 0%,#f3f6fb 55%,#dfe6f0 100%);
+  box-shadow:inset 0 -3px 0 #c8d2e2,inset 0 2px 0 #fff,0 4px 0 #9fb0cc,0 7px 10px #0005}
+.bigdie.hide{visibility:hidden}
+.bigdie .pips{display:block;width:100%;height:100%;fill:#1f2d78}
+.bigdie .go{position:absolute;inset:0;display:grid;place-items:center;font-weight:900;font-size:19px;color:#2a3a8c;letter-spacing:-.5px}
+.bigdie.go{animation:bob 1s ease-in-out infinite;box-shadow:inset 0 -3px 0 #c8d2e2,0 5px 0 #9fb0cc,0 0 0 3px #ffe066,0 0 20px 4px #ffe066aa}
+.bigdie.spin{animation:tumble .32s linear infinite}
+.bigdie.chosen .pips{fill:#e0700f}
 @keyframes bob{50%{transform:translateY(-5px)}}
-@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes tumble{0%{transform:rotate(0) translateY(0)}50%{transform:rotate(180deg) translateY(-8px) scale(.92)}100%{transform:rotate(360deg) translateY(0)}}
+
+/* item bubbles */
+.bub{width:40px;height:40px;border-radius:50%;position:relative;display:grid;place-items:center;
+  background:radial-gradient(circle at 32% 26%,#ffffffee 0 8%,#ffffff55 14%,#9fd2ff30 45%,#4d7fd855 80%,#cfe6ff99 100%);
+  box-shadow:inset 0 0 0 1.5px #ffffffaa,inset 0 -4px 8px #6ea8ff66,0 3px 6px #0004}
+.bub svg{width:66%;height:66%}
+.bub b{position:absolute;top:-3px;right:-3px;min-width:19px;height:19px;border-radius:10px;background:#ff3b3b;color:#fff;
+  font-size:12px;font-weight:900;display:grid;place-items:center;padding:0 4px;box-shadow:0 0 0 2px #fff}
+.bub:disabled{cursor:default}
+.bub.zero{opacity:.55}
+.bub.live{box-shadow:inset 0 0 0 1.5px #fff,0 0 0 3px #ffe066,0 0 16px #ffe066}
 
 /* board */
 #wrap{position:relative;width:var(--B);height:var(--B)}
 #board{position:absolute;inset:0;display:grid;grid-template:repeat(15,1fr)/repeat(15,1fr)}
-.isl{border-radius:calc(var(--u)*.35);background:var(--island);box-shadow:0 calc(var(--u)*.22) 0 var(--dirt),0 calc(var(--u)*.3) 10px #0004}
-.yard{margin:calc(var(--u)*.22);display:grid;place-items:center;
-  background:linear-gradient(var(--grass),var(--grass2))}
-.nest{width:72%;height:72%;border-radius:18%;background:var(--pcd);padding:5%;display:grid;grid-template:1fr 1fr/1fr 1fr;gap:4%;
-  box-shadow:0 0 0 calc(var(--u)*.12) #ffffff55}
-.nest b{border-radius:22%;background:var(--pc);display:grid;place-items:center}
-.nest b::after{content:"";width:52%;height:52%;border-radius:50%;background:var(--pcd);box-shadow:inset 0 3px 4px #0004}
-.cell{position:relative;display:grid;place-items:center;border:.5px solid var(--grassLine);background:var(--grass)}
+.isl{border-radius:calc(var(--u)*.3);background:var(--island);
+  box-shadow:inset 0 0 0 calc(var(--u)*.08) #b9e35a,0 calc(var(--u)*.26) 0 var(--dirt),0 calc(var(--u)*.32) 10px #0005}
+.yard{margin:calc(var(--u)*.2);display:grid;place-items:center;position:relative;
+  background:radial-gradient(circle at 30% 25%,#cdeb6a,#a9d544 70%)}
+.nest{width:71%;height:71%;border-radius:16%;background:var(--yd);padding:4%;display:grid;grid-template:1fr 1fr/1fr 1fr;gap:3%;
+  box-shadow:0 0 0 calc(var(--u)*.1) #ffffff40,0 4px 0 #0002}
+.nest.on{box-shadow:0 0 0 calc(var(--u)*.12) #fff6b0,0 0 calc(var(--u)*.6) #fff27a}
+.nest b{border-radius:16%;background:var(--y1);display:grid;place-items:center}
+.nest b:nth-child(2),.nest b:nth-child(3){background:var(--y2)}
+.nest b::after{content:"";width:58%;height:58%;border-radius:50%;background:var(--yh);box-shadow:inset 0 4px 5px #0005}
+.lbl{position:absolute;left:0;right:0;bottom:2%;text-align:center;font-weight:800;font-size:calc(var(--u)*.42);color:#4f8a1d;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 10%}
+.lbl.flip{bottom:auto;top:2%;transform:rotate(180deg)}
+.cell{position:relative;display:grid;place-items:center;background:var(--grass);box-shadow:inset -1px -1px 0 var(--grassLine),inset 1px 1px 0 #ffffff55}
 .cell.alt{background:var(--grass2)}
-.cell.col{background:var(--pc);border-color:var(--pcd)}
-.cell.hc::after{content:"";width:62%;height:62%;border-radius:50%;background:#ffffff40;box-shadow:inset 0 0 0 2px #ffffff55}
-.star{width:72%;height:72%;color:#3f9a2c}
-.cell.col .star{color:#fff;filter:drop-shadow(0 1px 1px #0005)}
-.center{background:conic-gradient(from -45deg,var(--red) 0 90deg,var(--green) 90deg 180deg,var(--yellow) 180deg 270deg,var(--blue) 270deg 360deg);
-  box-shadow:inset 0 0 0 2px #ffffff55}
-.bridge{position:absolute;width:calc(var(--u)*.8);height:calc(var(--u)*.42);transform:translate(-50%,-50%);border-radius:4px;
-  background:repeating-linear-gradient(90deg,var(--wood) 0 30%,var(--woodD) 30% 34%);box-shadow:0 3px 0 var(--woodD);pointer-events:none}
+.cell.path{background:var(--pc);box-shadow:none}
+.cell.path::after{content:"";position:absolute;inset:12%;border-radius:50%;background:#ffffff40;box-shadow:inset 0 0 0 2px #ffffff60}
+.star{width:62%;height:62%;color:#3c8a22;opacity:.75}
+.cell.path .star{position:relative;z-index:1;color:#2e7a1a;opacity:.85}
+.center{position:relative}
+.center svg{position:absolute;inset:0;width:100%;height:100%}
+.bridge{position:absolute;transform:translate(-50%,-50%);pointer-events:none;width:calc(var(--u)*.95);height:calc(var(--u)*.56);border-radius:5px;
+  background:linear-gradient(#c9773a,#a85c26);box-shadow:inset 0 2px 0 #e9a067,0 3px 0 #6e3a14}
+.bridge::before,.bridge::after{content:"";position:absolute;top:18%;bottom:18%;width:2px;background:#7a4119}
+.bridge::before{left:33%}.bridge::after{left:66%}
 .bridge.v{transform:translate(-50%,-50%) rotate(90deg)}
+
 /* things on squares */
-.it{position:absolute;inset:10%;display:grid;place-items:center;animation:float 1.6s ease-in-out infinite;
-  filter:drop-shadow(0 0 4px #fff59a) drop-shadow(0 2px 1px #0005)}
-.it svg{width:100%;height:100%}
-@keyframes float{50%{transform:translateY(-12%)}}
-.fn{position:absolute;inset:6%;display:grid;place-items:center;border-radius:4px;box-shadow:0 0 0 2.5px var(--fcol)}
-.fn svg{width:100%;height:100%}
+.it{position:absolute;inset:6%;z-index:2;display:grid;place-items:center;animation:float 1.8s ease-in-out infinite}
+.it svg{width:100%;height:100%;filter:drop-shadow(0 2px 1px #0005)}
+.it.plus{animation:blinkpop 1s ease-in-out infinite}
+.it.new{animation:pop .45s ease-out,float 1.8s ease-in-out .45s infinite}
+.it.plus.new{animation:pop .45s ease-out,blinkpop 1s ease-in-out .45s infinite}
+@keyframes float{50%{transform:translateY(-10%)}}
+@keyframes blinkpop{50%{transform:scale(1.13);filter:brightness(1.25)}}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.fn{position:absolute;inset:-8% -4%;z-index:3;display:grid;place-items:center}
+.fn svg{width:100%;height:100%;filter:drop-shadow(0 0 3px var(--fcol)) drop-shadow(0 0 2px var(--fcol)) drop-shadow(0 2px 1px #0006)}
 .cell.pick{cursor:pointer}
-.cell.pick::before{content:"";position:absolute;inset:6%;border-radius:4px;border:2.5px dashed #fff;animation:blink .9s infinite;z-index:1}
-@keyframes blink{50%{opacity:.2}}
+.cell.pick::before{content:"";position:absolute;inset:5%;border-radius:5px;border:2.5px dashed #fff;animation:blink .9s infinite;z-index:4}
+@keyframes blink{50%{opacity:.25}}
 
 /* tokens */
 #tokens{position:absolute;inset:0;pointer-events:none}
-.tk{position:absolute;width:calc(var(--u)*.86);height:calc(var(--u)*1.12);transform:translate(-50%,-80%);
-  transition:left .13s ease-out,top .13s ease-out,width .15s,height .15s;pointer-events:auto}
+.tk{position:absolute;width:calc(var(--u)*1.3);height:calc(var(--u)*1.62);transform:translate(-50%,-84%);
+  transition:left .14s ease-out,top .14s ease-out;pointer-events:auto}
 .tk svg{width:100%;height:100%;overflow:visible}
-.tk.small{width:calc(var(--u)*.62);height:calc(var(--u)*.8)}
-.tk.can{z-index:6!important;animation:hop .55s ease-in-out infinite}
-.tk.can::before{content:"";position:absolute;left:50%;bottom:-6%;width:110%;height:36%;transform:translateX(-50%);
-  border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 8px #fff}
-@keyframes hop{50%{transform:translate(-50%,-92%)}}
+.tk.small{width:calc(var(--u)*.92);height:calc(var(--u)*1.15)}
+.tk.can{animation:hop .5s ease-in-out infinite}
+.tk.can::before{content:"";position:absolute;left:50%;bottom:2%;width:96%;height:30%;transform:translateX(-50%);
+  border-radius:50%;border:2.5px solid #fff;box-shadow:0 0 8px #fff,inset 0 0 6px #fff}
+@keyframes hop{50%{transform:translate(-50%,-100%)}}
+#arrow{position:absolute;width:calc(var(--u)*1.1);height:calc(var(--u)*1.3);transform:translate(-50%,-50%);z-index:60;pointer-events:none;
+  animation:arrowbob .7s ease-in-out infinite}
+#arrow.up{animation-name:arrowbobup}
+@keyframes arrowbob{50%{margin-top:calc(var(--u)*.3)}}
+@keyframes arrowbobup{50%{margin-top:calc(var(--u)*-.3)}}
 
 /* message */
-#msg{width:var(--B);min-height:40px;text-align:center;font-size:15px;font-weight:700;text-shadow:0 1px 2px #0006;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-#msg small{font-weight:600;color:var(--muted);font-size:13px}
-#msg .cancel{background:#fff;color:var(--cardInk);border-radius:999px;padding:6px 16px;font-size:14px;text-shadow:none}
-#menu{position:fixed;top:max(8px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);background:#ffffff2e;border-radius:999px;
-  padding:5px 12px;font-size:13px;font-weight:700;color:#fff}
+#msg{width:var(--B);min-height:30px;text-align:center;font-size:14px;font-weight:700;text-shadow:0 1px 3px #0008;
+  display:flex;flex-direction:column;align-items:center;gap:4px}
+#msg small{font-weight:600;color:#d8e3ff;font-size:13px}
+#msg .cancel{background:#fff;color:#203040;border-radius:999px;padding:6px 16px;font-size:14px;text-shadow:none}
 
 /* number picker */
-#picker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--card);color:var(--cardInk);border-radius:18px;
-  padding:14px;box-shadow:0 10px 30px #0006;z-index:20;text-align:center;width:min(86%,330px)}
-#picker p{margin:0 0 10px;font-weight:800}
-#picker .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-#picker .nums button{aspect-ratio:1;border-radius:12px;background:#fff;border:2px solid #dbe3ec;display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:16%}
-#picker .nums button i{border-radius:50%;margin:8%}
-#picker .nums button i.on{background:#203a73}
-#picker .nums button:disabled{opacity:.3}
-#picker .x{margin-top:10px;color:var(--cardMuted);font-weight:700}
+#picker{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:#ffffffee;color:#203040;border-radius:20px;
+  padding:14px;box-shadow:0 10px 30px #0007;z-index:80;text-align:center;width:min(84%,300px)}
+#picker p{margin:0 0 10px;font-weight:900}
+#picker .nums .bigdie{width:52px;height:52px;padding:6px}
+#picker .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center}
+#picker .nums .bigdie:disabled{opacity:.3}
+#picker .x{margin-top:12px;color:#61707f;font-weight:800}
 
-@media (prefers-reduced-motion:reduce){.it,.bigdie.go,.bigdie.spin,.tk.can,.cell.pick::before{animation:none}.tk{transition:none}}
+@media (prefers-reduced-motion:reduce){.it,.it.plus,.bigdie.go,.bigdie.spin,.tk.can,#arrow,.cell.pick::before{animation:none}.tk{transition:none}}
 
 /* overlays */
-.ov{position:fixed;inset:0;background:#0a1a4099;display:flex;align-items:center;justify-content:center;padding:16px;z-index:50}
+.ov{position:fixed;inset:0;background:#0a1240aa;display:flex;align-items:center;justify-content:center;padding:16px;z-index:100}
 .card{background:var(--card);color:var(--cardInk);border-radius:20px;padding:20px;width:min(92vw,400px);max-height:92svh;overflow:auto}
 .card h1{margin:0 0 6px;font-size:28px;letter-spacing:-.5px}
 .card h2{font-size:15px;margin:16px 0 8px}
@@ -159,12 +188,17 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:8px
 .tog input{width:20px;height:20px}
 .start{width:100%;margin-top:18px;padding:14px;font-size:17px;font-weight:800;border-radius:14px;background:#22b14c;color:#fff;box-shadow:0 4px 0 #157a33}
 .start:disabled{opacity:.5;cursor:default}
+.card .x{display:block;margin:12px auto 0;color:var(--cardMuted);font-weight:800}
 .rank{display:flex;gap:10px;align-items:center;font-size:17px;padding:6px 0}
 .rank i{width:16px;height:16px;border-radius:50%}
 </style>
 </head>
 <body>
-<button id="menu">New game</button>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
+<div id="top">
+  <button id="back" aria-label="Leave game"><svg viewBox="0 0 32 32"><path d="M19 6 9 16l10 10M10 16h15" fill="none" stroke="#6fb6ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+  <button id="menu" aria-label="Settings"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></button>
+</div>
 <div class="row" id="topRow"></div>
 <div id="wrap"><div id="board"></div><div id="tokens"></div></div>
 <div class="row" id="botRow"></div>
@@ -185,11 +219,12 @@ for(let r=14;r>=9;r--)P(r,6);
 for(let c=5;c>=0;c--)P(8,c);
 P(7,0);P(6,0);
 
+// colour 0 = top-left (red), 1 = top-right (green), 2 = bottom-right (yellow), 3 = bottom-left (blue)
 const COLORS=[
-  {key:'blue',name:'Blue',css:'var(--blue)',dark:'var(--blueD)'},
-  {key:'red',name:'Red',css:'var(--red)',dark:'var(--redD)'},
-  {key:'green',name:'Green',css:'var(--green)',dark:'var(--greenD)'},
-  {key:'yellow',name:'Yellow',css:'var(--yellow)',dark:'var(--yellowD)'}];
+  {key:'red',   name:'Red',   css:'#e8433a', path:'#e8433a', y1:'#ef4a3c', y2:'#e23a2d', yd:'#c42a1f', yh:'#9c1209', pawn:['#ffb0a3','#ef3b2f','#a3120a']},
+  {key:'green', name:'Green', css:'#1f8f55', path:'#1f8f55', y1:'#1f9a62', y2:'#16865a', yd:'#0f6e47', yh:'#0b4f33', pawn:['#e4ffa6','#86d92e','#3f8a0c']},
+  {key:'yellow',name:'Yellow',css:'#f5b318', path:'#f5cf1d', y1:'#ffa726', y2:'#fb9a1a', yd:'#e2780b', yh:'#c9520a', pawn:['#fff0a8','#ffbe1f','#c97400']},
+  {key:'blue',  name:'Blue',  css:'#3a7fe6', path:'#3a7fe6', y1:'#4a8cf2', y2:'#3b7de8', yd:'#2a5fca', yh:'#1c49a8', pawn:['#c8f4ff','#2fb4f2','#0a5fb0']}];
 const HOME=[
   [1,2,3,4,5].map(c=>[7,c]),
   [1,2,3,4,5].map(r=>[r,7]),
@@ -198,25 +233,33 @@ const HOME=[
 const SAFE=new Set([0,8,13,21,26,34,39,47]);
 const YARD=[[0,0],[9,0],[9,9],[0,9]];           // x,y of yard corner
 const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
-const FINISH=[[6.8,7.5],[7.5,6.8],[8.2,7.5],[7.5,8.2]];
-const MIN_PER_TYPE=1,MAX_PER_TYPE=4, MAX_HELD=3, STEP=150;
+const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
+const ITEM_TYPES=['dice','fence','plus'];
+const MIN_PER_TYPE=1,MAX_PER_TYPE=3,MAX_HELD=3,STEP=150;
+// a six comes more often than on a fair die: weights 1,1,1,1,1,2 -> P(6) = 2/7 = 28.6% (about 1 roll in 3.5)
+const ROLL_WEIGHTS=[1,1,1,1,1,2];
 let SPEED=1;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms*SPEED));
 const $=id=>document.getElementById(id);
+function rollDie(){
+  const tot=ROLL_WEIGHTS.reduce((a,b)=>a+b,0);let x=Math.random()*tot;
+  for(let i=0;i<6;i++){x-=ROLL_WEIGHTS[i];if(x<0)return i+1;}return 6;
+}
 
 /* ---------- state ---------- */
-let S=null, cfg={n:4,seats:[
+let S=null, cfg={n:2,seats:[
   {name:'',type:'human'},{name:'',type:'human'},{name:'',type:'human'},{name:'',type:'human'}],items:true};
 
-function seatColors(n){return n===2?[0,2]:n===3?[0,1,2]:[0,1,2,3];}
+// turn order is clockwise starting from blue (bottom-left)
+function seatColors(n){return n===2?[3,1]:n===3?[3,0,1]:[3,0,1,2];}
 function newGame(){
   const cols=seatColors(cfg.n);
   S={players:cols.map((c,i)=>({color:c,name:(cfg.seats[c].name||'').trim()||COLORS[c].name,
       type:cfg.seats[c].type,uid:cfg.seats[c].uid||null,tokens:[-1,-1,-1,-1],dice:0,fence:0,done:false})),
      gameId:Math.random().toString(36).slice(2),
      turn:0,phase:'roll',roll:null,chosen:false,sixes:0,fenceUsed:false,
-     items:{},fences:{},moves:[],winners:[],msg:'',itemsOn:cfg.items};
-  refreshItems('dice');refreshItems('fence');buildBoard();turnStart();
+     items:{},fences:{},fresh:[],moves:[],winners:[],msg:'',itemsOn:cfg.items};
+  ITEM_TYPES.forEach(refreshItems);buildBoard();turnStart();
 }
 const cur=()=>S.players[S.turn];
 const cellOf=(p,prog)=>(p.color*13+prog)%52;
@@ -231,8 +274,8 @@ function tokenXY(p,ti){
 function occupied(idx){
   return S.players.some(p=>p.tokens.some(g=>g>=0&&g<=50&&cellOf(p,g)===idx));
 }
-// Items of one type stay put until one of them is collected; then that whole type is re-scattered
-// with a new random count (it can go up or down).
+// Items of one type stay where they are until ANY ONE of them is collected.
+// Then every item of that type is cleared and scattered again with a new random count (1-3).
 function refreshItems(type){
   if(!S.itemsOn)return;
   for(const k in S.items)if(S.items[k]===type)delete S.items[k];
@@ -241,35 +284,39 @@ function refreshItems(type){
   while(placed<n&&tries++<300){
     const idx=Math.floor(Math.random()*52);
     if(SAFE.has(idx)||S.items[idx]||S.fences[idx]!==undefined||occupied(idx))continue;
-    S.items[idx]=type;placed++;
+    S.items[idx]=type;placed++;S.fresh.push(idx);
   }
 }
 
 /* ---------- rules ---------- */
+// A fence stops opponents on the square just before it. It is never broken by being reached;
+// it simply disappears when its owner's next turn starts.
 function simulate(pi,ti,v){
   const p=S.players[pi],g=p.tokens[ti];
   if(g===56)return null;
-  if(g===-1)return v===6?{path:[0],fenceHit:null}:null;
+  if(g===-1)return v===6?{path:[0],blocked:false}:null;
   if(g+v>56)return null;
-  const path=[];let fenceHit=null;
+  const path=[];let blocked=false;
   for(let s=g+1;s<=g+v;s++){
-    if(s<=50){const idx=cellOf(p,s),f=S.fences[idx];
-      if(f!==undefined&&f!==pi){fenceHit=idx;break;}}
+    if(s<=50){const f=S.fences[cellOf(p,s)];
+      if(f!==undefined&&f!==pi){blocked=true;break;}}
     path.push(s);
   }
-  return {path,fenceHit};
+  if(!path.length)return null;        // fence right in front: this token cannot move
+  return {path,blocked};
 }
 function validMoves(pi,v){
   const out=[];
   S.players[pi].tokens.forEach((_,ti)=>{const sim=simulate(pi,ti,v);if(sim)out.push({ti,sim});});
   return out;
 }
-const finalOf=(pi,m)=>m.sim.path.length?m.sim.path[m.sim.path.length-1]:S.players[pi].tokens[m.ti];
+const finalOf=(pi,m)=>m.sim.path[m.sim.path.length-1];
 function capturesAt(pi,idx){
   if(SAFE.has(idx))return 0;let n=0;
   S.players.forEach((q,qi)=>{if(qi!==pi)q.tokens.forEach(g=>{if(g>=0&&g<=50&&cellOf(q,g)===idx)n++;});});
   return n;
 }
+function removeFencesOf(pi){for(const k in S.fences)if(S.fences[k]===pi)delete S.fences[k];}
 
 function turnStart(){
   S.phase='roll';S.roll=null;S.chosen=false;S.fenceUsed=false;S.moves=[];
@@ -281,6 +328,7 @@ function nextTurn(bonus){
   if(!bonus||cur().done){
     S.sixes=0;
     do{S.turn=(S.turn+1)%S.players.length;}while(cur().done);
+    removeFencesOf(S.turn);           // your fences expire when your turn comes round again
   }
   turnStart();
 }
@@ -288,8 +336,8 @@ function nextTurn(bonus){
 async function doRoll(){
   if(S.phase!=='roll')return;
   S.phase='anim';S.rolling=true;
-  for(let k=0;k<6;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(55);}
-  S.rolling=false;const v=1+Math.floor(Math.random()*6);
+  for(let k=0;k<7;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(60);}
+  S.rolling=false;const v=rollDie();
   S.roll=v;S.chosen=false;cur().last=v;
   if(v===6){S.sixes++;
     if(S.sixes===3){S.msg='Three sixes in a row, turn lost.';render();await sleep(1100);S.msg='';nextTurn(false);return;}
@@ -310,29 +358,27 @@ async function afterValue(){
 }
 async function doMove(pi,ti,sim){
   if(S.phase!=='move')return;
-  S.phase='anim';S.moves=[];S.msg='';
-  const p=S.players[pi],notes=[];
+  S.phase='anim';S.moves=[];S.msg='';S.fresh=[];
+  const p=S.players[pi],notes=[];let bonus=false;
   for(const s of sim.path){
     p.tokens[ti]=s;render();await sleep(STEP);
   }
+  if(sim.blocked)notes.push('stopped at a fence');
   // items are only collected when the move ENDS exactly on them
   const end=p.tokens[ti];
   if(end>=0&&end<=50){const idx=cellOf(p,end),it=S.items[idx];
     if(it){delete S.items[idx];
       if(it==='dice'){if(p.dice<MAX_HELD)p.dice++;notes.push('collected a dice card');}
-      else{if(p.fence<MAX_HELD)p.fence++;notes.push('collected a fence');}
+      else if(it==='fence'){if(p.fence<MAX_HELD)p.fence++;notes.push('collected a fence');}
+      else{bonus=true;notes.push('hit +1, extra roll');}
       refreshItems(it);render();}}
-  if(sim.fenceHit!==null){
-    const owner=S.players[S.fences[sim.fenceHit]];
-    delete S.fences[sim.fenceHit];notes.push(`stopped by ${owner.name}'s fence and broke it`);render();await sleep(250);
-  }
-  let bonus=false;const g=p.tokens[ti];
+  const g=p.tokens[ti];
   if(g<=50){const idx=cellOf(p,g);
     if(!SAFE.has(idx)){S.players.forEach((q,qi)=>{if(qi===pi)return;
       q.tokens.forEach((t,k)=>{if(t>=0&&t<=50&&cellOf(q,t)===idx){q.tokens[k]=-1;bonus=true;notes.push(`captured ${q.name}`);}});});}}
   if(g===56){bonus=true;notes.push('brought a token home');}
   if(S.roll===6&&!S.chosen)bonus=true;
-  if(!p.done&&p.tokens.every(t=>t===56)){p.done=true;S.winners.push(pi);notes.push('finished!');}
+  if(!p.done&&p.tokens.every(t=>t===56)){p.done=true;S.winners.push(pi);removeFencesOf(pi);notes.push('finished!');}
   const left=S.players.filter(q=>!q.done);
   if(notes.length)S.msg=`${p.name} ${[...new Set(notes)].join(', ')}.`;
   render();
@@ -346,7 +392,7 @@ function canFence(idx){return !SAFE.has(idx)&&!S.items[idx]&&S.fences[idx]===und
 function placeFence(idx){
   if(S.phase!=='fence'||!canFence(idx))return;
   S.fences[idx]=S.turn;cur().fence--;S.fenceUsed=true;S.phase='roll';
-  S.msg=`${cur().name} placed a fence.`;render();
+  S.msg=`${cur().name} placed a fence until their next turn.`;render();
 }
 
 /* ---------- computer player ---------- */
@@ -357,11 +403,11 @@ function botScore(pi,m){
   if(g<=50&&f>50)sc+=35;
   if(f<=50){const idx=cellOf(p,f);
     sc+=capturesAt(pi,idx)*90;
-    if(S.items[idx])sc+=22;
+    if(S.items[idx])sc+=S.items[idx]==='plus'?30:22;
     if(SAFE.has(idx))sc+=18;
     else{S.players.forEach((q,qi)=>{if(qi===pi)return;q.tokens.forEach(t=>{
       if(t>=0&&t<=50){const d=(idx-cellOf(q,t)+52)%52;if(d>=1&&d<=6)sc-=28;}});});}}
-  if(m.sim.fenceHit!==null)sc-=8;
+  if(m.sim.blocked)sc-=6;
   return sc+Math.random()*3;
 }
 function botPick(pi,moves){return moves.reduce((a,b)=>botScore(pi,b)>botScore(pi,a)?b:a);}
@@ -369,11 +415,11 @@ async function botTurn(){
   const pi=S.turn;await sleep(550);
   if(S.turn!==pi||S.phase!=='roll')return;
   const p=cur();
-  if(p.fence>0&&Math.random()<.7){
+  if(p.fence>0&&!S.fenceUsed&&Math.random()<.7){
     let best=null;
     S.players.forEach((q,qi)=>{if(qi===pi)return;q.tokens.forEach(t=>{
       if(t>=0&&t<=46&&(!best||t>best.t))best={q,t};});});
-    if(best){for(let k=1;k<=4;k++){const idx=cellOf(best.q,best.t+k);
+    if(best){for(let k=2;k<=5;k++){const idx=cellOf(best.q,best.t+k);
       if(canFence(idx)){S.phase='fence';placeFence(idx);await sleep(500);break;}}}
   }
   if(p.dice>0){
@@ -388,102 +434,169 @@ async function botTurn(){
 
 /* ---------- rendering ---------- */
 const board=$('board'),tokLayer=$('tokens'),trackCells=[],tokEls=[];
-// which screen corner each colour sits in
 const CORNER={0:'tl',1:'tr',2:'br',3:'bl'};
 const STAR='<svg class="star" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2.5l2.9 6 6.6.8-4.9 4.5 1.3 6.5L12 17l-5.9 3.3 1.3-6.5L2.5 9.3l6.6-.8z"/></svg>';
 const PIP={1:[4],2:[0,8],3:[0,4,8],4:[0,2,6,8],5:[0,2,4,6,8],6:[0,2,3,5,6,8]};
-const pips=v=>[...Array(9)].map((_,k)=>`<i class="${v&&PIP[v].includes(k)?'on':''}"></i>`).join('');
-const DIE_ICON='<svg viewBox="0 0 20 20"><rect x="1.5" y="1.5" width="17" height="17" rx="4.5" fill="#fff" stroke="#b9c6d4" stroke-width="1.5"/><g fill="#203a73"><circle cx="6" cy="6" r="1.7"/><circle cx="14" cy="6" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="6" cy="14" r="1.7"/><circle cx="14" cy="14" r="1.7"/></g></svg>';
-const FENCE_ICON='<svg viewBox="0 0 20 20"><g stroke="#7a3f12" stroke-width="1"><rect x="2.5" y="3" width="3" height="15" rx="1" fill="#e08a3a"/><rect x="14.5" y="3" width="3" height="15" rx="1" fill="#e08a3a"/><rect x="1" y="6" width="18" height="3.4" rx="1" fill="#f0a24f"/><rect x="1" y="11.5" width="18" height="3.4" rx="1" fill="#f0a24f"/></g></svg>';
-const PAWN=c=>`<svg viewBox="0 0 40 52"><ellipse cx="20" cy="48" rx="14" ry="4.5" fill="#0005"/>
- <path d="M7 45c0-7 5-13 8-16h10c3 3 8 9 8 16 0 2.5-6 4-13 4S7 47.5 7 45z" fill="${c}" stroke="#fff" stroke-width="2.5"/>
- <circle cx="20" cy="17" r="11" fill="${c}" stroke="#fff" stroke-width="2.5"/>
- <ellipse cx="16" cy="13" rx="4" ry="3" fill="#fff9"/></svg>`;
+const PIP_XY=[[6,6],[15,6],[24,6],[6,15],[15,15],[24,15],[6,24],[15,24],[24,24]];
+const pips=v=>v?`<svg class="pips" viewBox="0 0 30 30">${PIP[v].map(k=>`<circle cx="${PIP_XY[k][0]}" cy="${PIP_XY[k][1]}" r="3.6"/>`).join('')}</svg>`:'';
 
-function buildBoard(){
-  board.innerHTML='';tokLayer.innerHTML='';trackCells.length=0;tokEls.length=0;
-  // cross-shaped island behind the track
-  [['1/span 15','7/span 3'],['7/span 3','1/span 15']].forEach(([r,c])=>{const d=document.createElement('div');d.className='isl';
-    d.style.cssText=`grid-row:${r};grid-column:${c}`;board.appendChild(d);});
-  YARD.forEach(([x,y],c)=>{const d=document.createElement('div');d.className='isl yard';
-    d.style.cssText=`grid-row:${y+1}/span 6;grid-column:${x+1}/span 6;--pc:${COLORS[c].css};--pcd:${COLORS[c].dark}`;
-    d.innerHTML='<div class="nest"><b></b><b></b><b></b><b></b></div>';board.appendChild(d);});
-  const ctr=document.createElement('div');ctr.className='center';ctr.style.cssText='grid-row:7/span 3;grid-column:7/span 3';board.appendChild(ctr);
-  TRACK.forEach(([r,c],idx)=>{const d=document.createElement('div');d.className='cell'+((r+c)%2?' alt':'');
-    d.style.gridRow=r+1;d.style.gridColumn=c+1;
-    if(idx%13===0){const k=idx/13;d.classList.add('col');d.style.setProperty('--pc',COLORS[k].css);d.style.setProperty('--pcd',COLORS[k].dark);}
-    if(SAFE.has(idx))d.innerHTML=STAR;
-    d.onclick=()=>placeFence(idx);trackCells[idx]=d;board.appendChild(d);});
-  HOME.forEach((cells,c)=>cells.forEach(([r,cc])=>{const d=document.createElement('div');d.className='cell col hc';
-    d.style.cssText=`grid-row:${r+1};grid-column:${cc+1};--pc:${COLORS[c].css};--pcd:${COLORS[c].dark}`;board.appendChild(d);}));
-  // wooden bridges from each nest to its start square
-  [[1.5,5.9,'v'],[9.1,1.5,''],[13.5,9.1,'v'],[5.9,13.5,'']].forEach(([x,y,v])=>{const b=document.createElement('div');b.className='bridge '+v;
-    b.style.left=x/15*100+'%';b.style.top=y/15*100+'%';tokLayer.appendChild(b);});
-  S.players.forEach((p,pi)=>p.tokens.forEach((_,ti)=>{const b=document.createElement('button');b.className='tk';
-    b.innerHTML=PAWN(COLORS[p.color].css);b.setAttribute('aria-label',`${p.name} token ${ti+1}`);
-    b.onclick=()=>{const m=S.moves.find(m=>m.ti===ti);if(S.phase==='move'&&S.turn===pi&&m&&canControl(pi))doMove(pi,ti,m.sim);};
-    tokEls.push({el:b,pi,ti});tokLayer.appendChild(b);}));
+// small 3D die (board item + bubble)
+const DIE_SVG=`<svg viewBox="0 0 40 40"><rect x="4" y="6" width="32" height="31" rx="8" fill="#b9c4d8"/>
+ <rect x="4" y="3" width="32" height="31" rx="8" fill="url(#dieFace)" stroke="#c9d3e3" stroke-width="1"/>
+ <g fill="#25337a"><circle cx="12.5" cy="11" r="3"/><circle cx="27.5" cy="11" r="3"/><circle cx="20" cy="18.5" r="3"/><circle cx="12.5" cy="26" r="3"/><circle cx="27.5" cy="26" r="3"/></g></svg>`;
+// golden picket fence
+const FENCE_PICKETS=`<g stroke="#d9480f" stroke-width="2.2" stroke-linejoin="round">
+ <rect x="3" y="14" width="34" height="5.5" rx="1.5" fill="#ffc21a"/><rect x="3" y="25" width="34" height="5.5" rx="1.5" fill="#ffc21a"/>
+ ${[5,13.5,22,30.5].map(x=>`<path d="M${x} 35V12l2.75-4.5L${x+5.5} 12v23z" fill="url(#fenceWood)"/>`).join('')}</g>`;
+const FENCE_SVG=`<svg viewBox="0 0 40 40">${FENCE_PICKETS}</svg>`;
+// orange tile used under board items
+const TILE=inner=>`<svg viewBox="0 0 40 40"><rect x="2" y="4" width="36" height="35" rx="8" fill="#c95a0a"/>
+ <rect x="2" y="1.5" width="36" height="35" rx="8" fill="url(#tileFill)" stroke="#ffe08a" stroke-width="1.6"/>${inner}</svg>`;
+const FENCE_TILE=TILE(`<g transform="translate(5 4) scale(.75)">${FENCE_PICKETS}</g>`);
+const PLUS_TILE=TILE(`<text x="20" y="25.5" text-anchor="middle" font-size="15" font-weight="900" font-family="ui-rounded,system-ui,sans-serif"
+  textLength="22" lengthAdjust="spacingAndGlyphs" fill="#fff" stroke="#b44a00" stroke-width="2.6" paint-order="stroke">+1</text>`);
+const PERSON='<svg viewBox="0 0 40 40"><circle cx="20" cy="13" r="8.5" fill="#fff"/><path d="M3 40c0-10 7.6-16 17-16s17 6 17 16z" fill="#fff"/></svg>';
+const ARROW='<svg viewBox="0 0 40 48"><path d="M12 2h16v20h10L20 46 2 22h10z" fill="url(#arrowFill)" stroke="#e07000" stroke-width="2.5" stroke-linejoin="round"/><path d="M15 5h5v19" stroke="#fff8" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>';
+const PAWN=c=>`<svg viewBox="0 0 60 75">
+ <ellipse cx="30" cy="70" rx="27" ry="5" fill="#0005"/>
+ <ellipse cx="30" cy="62" rx="26" ry="9.5" fill="url(#pd-${c})"/>
+ <path d="M5 60c0-13 11-20 15-32h20c4 12 15 19 15 32 0 4.5-11 8-25 8S5 64.5 5 60z" fill="url(#pb-${c})"/>
+ <ellipse cx="30" cy="28" rx="12.5" ry="4.2" fill="url(#pd-${c})"/>
+ <circle cx="30" cy="17" r="16" fill="url(#ph-${c})"/>
+ <ellipse cx="23.5" cy="10" rx="6.5" ry="4.6" fill="#fff" opacity=".9"/>
+ <path d="M12 57c1.5-9 6-15 10-24" stroke="#fff" stroke-width="3.2" stroke-linecap="round" fill="none" opacity=".55"/></svg>`;
+const CENTER_SVG=c=>{const t=(pts,col,inner)=>`<polygon points="${pts}" fill="${col}"/><polygon points="${inner}" fill="none" stroke="#ffffff70" stroke-width="5" stroke-linejoin="round"/>`;
+  return `<svg viewBox="0 0 300 300">
+  ${t('0,0 150,150 0,300',COLORS[0].path,'30,60 110,150 30,240')}
+  ${t('0,0 300,0 150,150',COLORS[1].path,'60,30 240,30 150,110')}
+  ${t('300,0 300,300 150,150',COLORS[2].path,'270,60 270,240 190,150')}
+  ${t('0,300 150,150 300,300',COLORS[3].path,'60,270 150,190 240,270')}</svg>`;};
+
+function buildDefs(){
+  let d=`<linearGradient id="dieFace" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#e3e9f2"/></linearGradient>
+   <linearGradient id="fenceWood" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff27a"/><stop offset="1" stop-color="#ffc312"/></linearGradient>
+   <linearGradient id="tileFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb43a"/><stop offset="1" stop-color="#ff8a12"/></linearGradient>
+   <linearGradient id="arrowFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff59a"/><stop offset="1" stop-color="#ffb300"/></linearGradient>`;
+  COLORS.forEach((c,i)=>{const[l,m,k]=c.pawn;
+    d+=`<linearGradient id="pb-${i}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${l}"/><stop offset=".45" stop-color="${m}"/><stop offset="1" stop-color="${k}"/></linearGradient>
+     <linearGradient id="pd-${i}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${m}"/><stop offset="1" stop-color="${k}"/></linearGradient>
+     <radialGradient id="ph-${i}" cx=".38" cy=".32" r=".75"><stop offset="0" stop-color="${l}"/><stop offset=".45" stop-color="${m}"/><stop offset="1" stop-color="${k}"/></radialGradient>`;});
+  $('defs').innerHTML=d;
 }
 
-/* actions from a corner panel: only the player whose turn it is can use them */
+// VR = number of clockwise quarter turns applied to the whole board view
+let VR=0;
+const rotRC=(r,c)=>{for(let k=0;k<VR;k++)[r,c]=[c,14-r];return[r,c];};
+const rotXY=(x,y)=>{for(let k=0;k<VR;k++)[x,y]=[15-y,x];return[x,y];};
+const SCREEN=['tl','tr','br','bl'];
+const screenCorner=c=>SCREEN[(c+VR)%4];          // colour c sits in this screen corner
+const yardScreen=c=>{let[x,y]=YARD[c];for(let k=0;k<VR;k++)[x,y]=[9-y,x];return[x,y];};
+function pickView(){
+  let me=null;
+  if(ONLINE)me=S.players.find(p=>p.uid===ONLINE.myId);
+  if(!me)me=S.players.find(p=>p.type==='human');
+  VR=me?(3-me.color+4)%4:0;
+}
+function buildBoard(){
+  pickView();
+  board.innerHTML='';tokLayer.innerHTML='';trackCells.length=0;tokEls.length=0;
+  const add=(cls,css,html='')=>{const d=document.createElement('div');d.className=cls;d.style.cssText=css;d.innerHTML=html;board.appendChild(d);return d;};
+  add('isl','grid-row:1/span 15;grid-column:7/span 3');
+  add('isl','grid-row:7/span 3;grid-column:1/span 15');
+  YARD.forEach((_,c)=>{const C=COLORS[c],p=S.players.find(q=>q.color===c),[x,y]=yardScreen(c);
+    add('isl yard',`grid-row:${y+1}/span 6;grid-column:${x+1}/span 6;--y1:${C.y1};--y2:${C.y2};--yd:${C.yd};--yh:${C.yh}`,
+      `<div class="nest" id="nest${c}"><b></b><b></b><b></b><b></b></div>${p?`<div class="lbl ${y===0?'flip':''}">${esc(p.name)}</div>`:''}`);});
+  TRACK.forEach(([r0,c0],idx)=>{const[r,c]=rotRC(r0,c0);
+    const d=add('cell'+((r+c)%2?' alt':''),`grid-row:${r+1};grid-column:${c+1}`);
+    if(idx%13===0){d.classList.add('path');d.style.setProperty('--pc',COLORS[idx/13].path);}
+    if(SAFE.has(idx))d.innerHTML=STAR;
+    d.onclick=()=>placeFence(idx);trackCells[idx]=d;});
+  HOME.forEach((cells,c)=>cells.forEach(([r0,c0])=>{const[r,cc]=rotRC(r0,c0);add('cell path',`grid-row:${r+1};grid-column:${cc+1};--pc:${COLORS[c].path}`);}));
+  add('center',`grid-row:7/span 3;grid-column:7/span 3;transform:rotate(${VR*90}deg)`,CENTER_SVG());
+  // wooden bridges between each nest and the track
+  [[1.5,5.85,1],[9.15,1.5,0],[13.5,9.15,1],[5.85,13.5,0]].forEach(([x0,y0,v])=>{const[x,y]=rotXY(x0,y0);
+    const b=document.createElement('div');b.className='bridge '+((v+VR)%2?'v':'');
+    b.style.left=x/15*100+'%';b.style.top=y/15*100+'%';tokLayer.appendChild(b);});
+  S.players.forEach((p,pi)=>p.tokens.forEach((_,ti)=>{const b=document.createElement('button');b.className='tk';
+    b.innerHTML=PAWN(p.color);b.setAttribute('aria-label',`${p.name} token ${ti+1}`);
+    b.onclick=()=>{const m=S.moves.find(m=>m.ti===ti);if(S.phase==='move'&&S.turn===pi&&m&&canControl(pi))doMove(pi,ti,m.sim);};
+    tokEls.push({el:b,pi,ti});tokLayer.appendChild(b);}));
+  const ar=document.createElement('div');ar.id='arrow';ar.innerHTML=ARROW;tokLayer.appendChild(ar);
+}
+
+/* actions: only the player whose turn it is (on their own phone) can use them */
 const canControl=pi=>{const q=S.players[pi];return q.type==='human'&&(!ONLINE||q.uid===ONLINE.myId);};
 const mine=pi=>S&&S.turn===pi&&canControl(pi);
 function tapDie(pi){if(mine(pi)&&S.phase==='roll')doRoll();}
-function tapPick(pi){if(mine(pi)&&S.phase==='roll'&&cur().dice)S.phase='choose',render();}
+function tapPick(pi){if(!mine(pi))return;if(S.phase==='choose'){S.phase='roll';render();}else if(S.phase==='roll'&&cur().dice){S.phase='choose';render();}}
 function tapFence(pi){if(!mine(pi))return;if(S.phase==='fence'){S.phase='roll';render();}
   else if(S.phase==='roll'&&cur().fence&&!S.fenceUsed){S.phase='fence';render();}}
 function cancelMode(){if(S.phase==='choose'||S.phase==='fence'){S.phase='roll';render();}}
 
 function cornerHTML(c){
-  const pi=S.players.findIndex(p=>p.color===c),side=CORNER[c].endsWith('r')?'r':'';
-  if(pi<0)return `<div class="corner ${side} empty"></div>`;
-  const p=S.players[pi],on=pi===S.turn&&S.phase!=='over',human=canControl(pi);
-  const home=p.tokens.filter(t=>t===56).length;
-  const canAct=on&&human&&S.phase==='roll';
-  const dieCls=['bigdie',on&&S.phase==='roll'&&human?'go':'',on&&S.chosen?'chosen':'',on&&S.phase==='anim'&&!S.chosen&&S.rolling?'spin':''].join(' ');
-  return `<div class="corner ${side} ${p.done?'out':on?'':'idle'}" style="--pc:${COLORS[c].css}">
-    <button class="${dieCls}" onclick="tapDie(${pi})" aria-label="Roll for ${esc(p.name)}" ${canAct?'':'tabindex="-1"'}>${pips(on&&S.roll?S.roll:(p.last||6))}</button>
-    <div class="who">
-      <div class="nm"><span class="ava">${p.type==='cpu'?'🤖':esc(p.name[0].toUpperCase())}</span>${esc(p.name)}${ONLINE&&p.uid===ONLINE.myId?' (you)':''}</div>
-      <div class="inv">
-        <button class="chipb ${on&&S.phase==='choose'?'live':''}" onclick="tapPick(${pi})" ${canAct&&p.dice?'':'disabled'} aria-label="Pick a number, ${p.dice} left">${DIE_ICON}${p.dice}</button>
-        <button class="chipb ${on&&S.phase==='fence'?'live':''}" onclick="tapFence(${pi})" ${(canAct&&p.fence&&!S.fenceUsed)||(on&&S.phase==='fence')?'':'disabled'} aria-label="Place a fence, ${p.fence} left">${FENCE_ICON}${p.fence}</button>
-      </div>
-      <div class="home">🏠 ${home}/4${p.done?' · done':''}</div>
-    </div></div>`;
+  const pos=screenCorner(c),cls=(pos[0]==='t'?'t ':'')+(pos[1]==='r'?'r':'');
+  const pi=S.players.findIndex(p=>p.color===c);
+  if(pi<0)return `<div class="corner ${cls} empty"></div>`;
+  const p=S.players[pi],on=pi===S.turn&&S.phase!=='over',ctl=canControl(pi),canAct=on&&ctl&&S.phase==='roll';
+  let face,dcls='bigdie';
+  if(!on)dcls+=' hide';
+  if(on&&S.rolling)dcls+=' spin';
+  if(on&&S.chosen)dcls+=' chosen';
+  if(canAct){face='<span class="go">go</span>';dcls+=' go';}
+  else face=pips(on&&S.roll?S.roll:0);
+  const bub=(kind,n,icon,fn,live,usable)=>`<button class="bub ${n?'':'zero'} ${live?'live':''}" onclick="${fn}(${pi})" ${usable?'':'disabled'}
+     aria-label="${kind}, ${n} left">${icon}${n?`<b>${n}</b>`:''}</button>`;
+  return `<div class="corner ${cls} ${p.done?'out':on?'on':''}">
+    <div class="prow"><div class="ava"><i>${PERSON}</i>${p.type==='cpu'?'<span class="bot">🤖</span>':''}</div>
+      <button class="${dcls}" onclick="tapDie(${pi})" aria-label="Roll the dice">${face}</button></div>
+    <div class="brow ${ONLINE&&!ctl?'hidden':''}">${bub('Pick a number',p.dice,DIE_SVG,'tapPick',on&&S.phase==='choose',canAct&&p.dice||on&&ctl&&S.phase==='choose')}
+      ${bub('Place a fence',p.fence,FENCE_SVG,'tapFence',on&&S.phase==='fence',canAct&&p.fence&&!S.fenceUsed||on&&ctl&&S.phase==='fence')}</div>
+  </div>`;
 }
 
 function render(){
   if(!S)return;const p=cur(),human=canControl(S.turn);
-  $('topRow').innerHTML=cornerHTML(0)+cornerHTML(1);
-  $('botRow').innerHTML=cornerHTML(3)+cornerHTML(2);
-  // squares
-  trackCells.forEach((d,idx)=>{d.querySelectorAll('.it,.fn').forEach(e=>e.remove());
-    if(S.fences[idx]!==undefined){const f=document.createElement('span');f.className='fn';
-      f.style.setProperty('--fcol',COLORS[S.players[S.fences[idx]].color].css);f.innerHTML=FENCE_ICON;d.appendChild(f);}
-    else if(S.items[idx]){const s=document.createElement('span');s.className='it';s.innerHTML=S.items[idx]==='dice'?DIE_ICON:FENCE_ICON;d.appendChild(s);}
-    d.classList.toggle('pick',S.phase==='fence'&&canFence(idx));});
+  const at=pos=>COLORS.findIndex((_,c)=>screenCorner(c)===pos);
+  $('topRow').innerHTML=cornerHTML(at('tl'))+cornerHTML(at('tr'));
+  $('botRow').innerHTML=cornerHTML(at('bl'))+cornerHTML(at('br'));
+  COLORS.forEach((_,c)=>{const n=$('nest'+c);if(n)n.classList.toggle('on',p.color===c&&S.phase!=='over');});
+  // squares: fences, items
+  const fresh=new Set(S.fresh||[]);
+  trackCells.forEach((d,idx)=>{
+    const want=S.fences[idx]!==undefined?'f'+S.fences[idx]:S.items[idx]||'';
+    if(d.dataset.k!==want){d.querySelectorAll('.it,.fn').forEach(e=>e.remove());d.dataset.k=want;
+      if(S.fences[idx]!==undefined){const f=document.createElement('span');f.className='fn';
+        f.style.setProperty('--fcol',COLORS[S.players[S.fences[idx]].color].css);f.innerHTML=FENCE_SVG;d.appendChild(f);}
+      else if(S.items[idx]){const s=document.createElement('span');const t=S.items[idx];
+        s.className='it '+t+(fresh.has(idx)?' new':'');s.innerHTML=t==='dice'?DIE_SVG:t==='fence'?FENCE_TILE:PLUS_TILE;d.appendChild(s);}}
+    d.classList.toggle('pick',S.phase==='fence'&&human&&canFence(idx));});
   // tokens (stacked ones shrink and fan out)
   const groups={};
-  tokEls.forEach(t=>{const xy=tokenXY(S.players[t.pi],t.ti);const k=xy.join(',');(groups[k]=groups[k]||[]).push({t,xy});});
+  tokEls.forEach(t=>{const xy=rotXY(...tokenXY(S.players[t.pi],t.ti));const k=xy.join(',');(groups[k]=groups[k]||[]).push({t,xy});});
   const movable=new Set(S.phase==='move'&&human?S.moves.map(m=>m.ti):[]);
   Object.values(groups).forEach(g=>g.forEach(({t,xy},i)=>{
-    let[x,y]=xy;if(g.length>1){const a=i/g.length*Math.PI*2;x+=Math.cos(a)*.24;y+=Math.sin(a)*.18;}
-    t.el.style.left=x/15*100+'%';t.el.style.top=(y+.3)/15*100+'%';
+    let[x,y]=xy;if(g.length>1){const a=i/g.length*Math.PI*2+.6;x+=Math.cos(a)*.25;y+=Math.sin(a)*.2;}
+    t.el.style.left=x/15*100+'%';t.el.style.top=(y+.32)/15*100+'%';
     t.el.classList.toggle('small',g.length>1);
     t.el.classList.toggle('can',t.pi===S.turn&&movable.has(t.ti));
-    t.el.style.zIndex=Math.round(y*2)+(t.pi===S.turn?1:0);}));
+    t.el.style.zIndex=10+Math.round(y*3)+(t.pi===S.turn?1:0);}));
+  // turn arrow over the current player's nest
+  const ar=$('arrow');
+  if(ar){const[yx,yy]=yardScreen(p.color),top=yy===0;
+    ar.style.display=S.phase==='over'?'none':'';ar.classList.toggle('up',top);
+    ar.style.left=(yx+4.1)/15*100+'%';ar.style.top=(top?yy+.75:yy+5.25)/15*100+'%';
+    ar.style.transform=`translate(-50%,-50%)${top?' rotate(180deg)':''}`;}
   // number picker
   const old=$('picker');if(old)old.remove();
   if(S.phase==='choose'&&human){const d=document.createElement('div');d.id='picker';
-    let nums='';for(let v=1;v<=6;v++)nums+=`<button onclick="chooseValue(${v})" ${validMoves(S.turn,v).length?'':'disabled'} aria-label="${v}">${pips(v)}</button>`;
+    let nums='';for(let v=1;v<=6;v++)nums+=`<button class="bigdie" onclick="chooseValue(${v})" ${validMoves(S.turn,v).length?'':'disabled'} aria-label="${v}">${pips(v)}</button>`;
     d.innerHTML=`<p>Pick your number</p><div class="nums">${nums}</div><button class="x" onclick="cancelMode()">Cancel</button>`;
     $('wrap').appendChild(d);}
   // message
   let m='';const sub=S.msg?`<small>${esc(S.msg)}</small>`:'';
   if(S.phase==='over')m='Game over';
   else if(!human)m=p.type==='human'?`Waiting for ${esc(p.name)}…`:`${esc(p.name)} is playing…`;
-  else if(S.phase==='roll')m=`${esc(p.name)}, tap your die`;
+  else if(S.phase==='roll')m=`${esc(p.name)}, tap go`;
   else if(S.phase==='move')m=`Move ${S.roll}: tap a hopping token`;
   else if(S.phase==='fence')m=`Tap a flashing square for your fence <button class="cancel" onclick="cancelMode()">Cancel</button>`;
   else if(S.phase==='choose')m='&nbsp;';
@@ -491,6 +604,7 @@ function render(){
   if(ONLINE&&!applyingRemote)pushState();
 }
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+buildDefs();
 
 /* ---------- screens ---------- */
 function showSetup(){
@@ -498,12 +612,12 @@ function showSetup(){
   const draw=()=>{const cols=seatColors(cfg.n);
     ov.innerHTML=`<div class="card"><h1>Ludo Talent</h1>
     <div class="seg" style="margin:10px 0 14px"><button class="sel">On this phone</button><button id="goOnline">Online with friends</button></div>
-    <p>Land exactly on a dice card to collect it, then use it to pick any number from 1 to 6. Land exactly on a fence to collect it, then place it to stop opponents.</p>
+    <p>Land exactly on a dice to collect it and later pick any number from 1 to 6. Land on a fence to collect it, then place it to block opponents until your next turn. Land on +1 for an extra roll.</p>
     <h2>Players</h2><div class="seg">${[2,3,4].map(n=>`<button class="${cfg.n===n?'sel':''}" data-n="${n}">${n}</button>`).join('')}</div>
     <h2>Who's playing</h2>${cols.map(c=>`<div class="seat"><i style="background:${COLORS[c].css}"></i>
       <input data-c="${c}" placeholder="${COLORS[c].name}" value="${esc(cfg.seats[c].name)}" maxlength="12">
       <button data-t="${c}">${cfg.seats[c].type==='human'?'👤 Human':'🤖 Computer'}</button></div>`).join('')}
-    <h2>Items</h2><label class="tog"><input type="checkbox" id="itm" ${cfg.items?'checked':''}> Dice cards and fences on the board</label>
+    <h2>Items</h2><label class="tog"><input type="checkbox" id="itm" ${cfg.items?'checked':''}> Dice, fences and +1 on the board</label>
     <button class="start" id="go">Start game</button></div>`;
     ov.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{cfg.n=+b.dataset.n;draw();});
     ov.querySelectorAll('[data-c]').forEach(i=>i.oninput=()=>cfg.seats[i.dataset.c].name=i.value);
@@ -562,7 +676,7 @@ const newCode=()=>[...Array(4)].map(()=>CODE_CHARS[Math.floor(Math.random()*CODE
 function showOnline(){
   const ov=document.createElement('div');ov.className='ov';ov.id='online';
   const err=fbReady();
-  const host={n:2,items:true,seats:{0:'host',1:'friend',2:'friend',3:'friend'}};
+  const host={n:2,items:true,seats:{3:'host',0:'friend',1:'friend',2:'friend'}};
   const card=html=>{ov.innerHTML=`<div class="card">${html}</div>`;};
   const back=()=>{ov.remove();leaveRoom();showSetup();};
 
@@ -584,13 +698,14 @@ function showOnline(){
 
   function hostSetup(){
     const cols=seatColors(host.n);
+    if(!cols.some(k=>host.seats[k]==='host'))host.seats[cols[0]]='host';
     const label={host:'👤 You',friend:'🌐 Friend',cpu:'🤖 Computer'};
     card(`<h1>New room</h1>
       <h2>Players</h2><div class="seg">${[2,3,4].map(n=>`<button class="${host.n===n?'sel':''}" data-n="${n}">${n}</button>`).join('')}</div>
       <h2>Seats</h2><p style="margin-bottom:8px">Tap a seat to switch between you, a friend and the computer.</p>
       ${cols.map(c=>`<div class="seat"><i style="background:${COLORS[c].css}"></i><span style="flex:1">${COLORS[c].name}</span>
         <button data-s="${c}">${label[host.seats[c]]}</button></div>`).join('')}
-      <h2>Items</h2><label class="tog"><input type="checkbox" id="itm" ${host.items?'checked':''}> Dice cards and fences on the board</label>
+      <h2>Items</h2><label class="tog"><input type="checkbox" id="itm" ${host.items?'checked':''}> Dice, fences and +1 on the board</label>
       <button class="start" id="create">Create room</button>
       <button class="x" id="bk" style="margin-top:10px;color:var(--cardMuted);font-weight:700">Back</button>`);
     ov.querySelectorAll('[data-n]').forEach(b=>b.onclick=()=>{host.n=+b.dataset.n;hostSetup();});
@@ -661,8 +776,10 @@ function showOnline(){
   home();document.body.appendChild(ov);
 }
 
-$('menu').onclick=()=>{if(document.getElementById('setup')||document.getElementById('online'))return;
-  document.querySelectorAll('.ov').forEach(o=>o.remove());leaveRoom();showSetup();};
+function toMenu(){if(document.getElementById('setup')||document.getElementById('online'))return;
+  if(S&&S.phase!=='over'&&!document.getElementById('winov')&&!confirm('Leave this game?'))return;
+  document.querySelectorAll('.ov').forEach(o=>o.remove());leaveRoom();showSetup();}
+$('menu').onclick=toMenu;$('back').onclick=toMenu;
 showSetup();
 </script>
 </body>
