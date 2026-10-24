@@ -158,10 +158,10 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 .cell.chosenF::before{content:"";position:absolute;inset:0;background:#fff6;border-radius:4px;z-index:3;animation:none}
 .ghost{position:absolute;inset:-6%;z-index:4;opacity:.75;animation:blink 1s infinite}
 .ghost svg{width:100%;height:100%}
-#fconfirm{position:absolute;z-index:90;transform:translate(-50%,-115%);display:flex;gap:6px;background:#0d1a4fdd;padding:5px;border-radius:999px;
+#fconfirm{position:absolute;z-index:90;transform:translate(-50%,-112%);display:flex;gap:5px;background:#0d1a4fdd;padding:4px;border-radius:999px;
   box-shadow:0 4px 12px #0007}
 #fconfirm.below{transform:translate(-50%,15%)}
-#fconfirm button{width:38px;height:38px;border-radius:50%;font-size:21px;font-weight:900;color:#fff;display:grid;place-items:center}
+#fconfirm button{width:30px;height:30px;border-radius:50%;font-size:17px;font-weight:900;color:#fff;display:grid;place-items:center}
 #fconfirm .ok{background:#22b14c;box-shadow:0 3px 0 #157a33}
 #fconfirm .no{background:#e8433a;box-shadow:0 3px 0 #a3201a}
 /* throwables */
@@ -171,7 +171,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 .corner:not(.t) .tray{bottom:calc(100% + 6px)}
 .corner.t .tray{top:calc(100% + 6px)}
 .corner.r .tray{right:0}
-.tray button{font-size:27px;width:42px;height:42px;border-radius:50%}
+.tray button{font-size:24px;width:38px;height:38px;border-radius:50%}
 .tray button:active{transform:scale(1.2)}
 .ava{cursor:pointer}
 .ava.target{animation:tgt .8s ease-in-out infinite;border-color:#ff5a5a}
@@ -411,7 +411,7 @@ function nextTurn(bonus){
 
 async function doRoll(){
   if(S.phase!=='roll')return;
-  S.phase='anim';S.rolling=true;
+  S.phase='anim';S.rolling=true;rollStartedAt=Date.now();
   for(let k=0;k<5;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(45);}
   S.rolling=false;const v=rollDie(cur().dry||0,S.sixes>0);
   S.roll=v;S.chosen=false;cur().last=v;cur().dry=v===6?0:(cur().dry||0)+1;
@@ -611,8 +611,8 @@ function tapPick(pi){if(!mine(pi))return;if(S.phase==='choose'){S.phase='roll';r
 function tapFence(pi){if(!mine(pi))return;if(S.phase==='fence'){S.phase='roll';render();}
   else if(S.phase==='roll'&&cur().fence&&!S.fenceUsed){S.phase='fence';render();}}
 let pendingFence=null;
-function selectFence(idx){if(!S||S.phase!=='fence'||!mine(S.turn)||!canFence(idx))return;pendingFence=idx;render();}
-function confirmFence(ok){const idx=pendingFence;pendingFence=null;if(ok&&idx!==null)placeFence(idx);else render();}
+function selectFence(idx){if(!S||S.phase!=='fence'||!mine(S.turn)||!canFence(idx))return;pendingFence=idx;draw();}
+function confirmFence(ok){const idx=pendingFence;pendingFence=null;if(ok&&idx!==null)placeFence(idx);else draw();}
 function cancelMode(){pendingFence=null;if(S.phase==='choose'||S.phase==='fence'){S.phase='roll';render();}}
 
 function cornerHTML(c){
@@ -638,8 +638,11 @@ function cornerHTML(c){
   </div>`;
 }
 
+// draw(): repaint this phone only. render(): repaint AND send the game state (only for real game moves).
+let drawOnly=false;
+function draw(){drawOnly=true;try{render();}finally{drawOnly=false;}}
 function render(){
-  if(!S)return;const p=cur(),human=canControl(S.turn);
+  if(!S)return;lastRenderAt=Date.now();const p=cur(),human=canControl(S.turn);
   const at=pos=>COLORS.findIndex((_,c)=>screenCorner(c)===pos);
   $('topRow').innerHTML=cornerHTML(at('tl'))+cornerHTML(at('tr'));
   $('botRow').innerHTML=cornerHTML(at('bl'))+cornerHTML(at('br'));
@@ -662,7 +665,8 @@ function render(){
   const oc=$('fconfirm');if(oc)oc.remove();
   if(pendingFence!==null&&human){const[r,c]=rotRC(...TRACK[pendingFence]);const box=document.createElement('div');box.id='fconfirm';
     const below=r<2;box.className=below?'below':'';
-    box.style.left=(c+.5)/15*100+'%';box.style.top=(below?r+1:r)/15*100+'%';
+    const W=$('wrap').clientWidth,half=37;                 // the box is about 74px wide
+    box.style.left=Math.min(Math.max((c+.5)/15*W,half+2),W-half-2)+'px';box.style.top=(below?r+1:r)/15*100+'%';
     box.innerHTML=`<button class="ok" onclick="confirmFence(true)" aria-label="Place fence here">✓</button><button class="no" onclick="confirmFence(false)" aria-label="Choose another square">✕</button>`;
     $('wrap').appendChild(box);}
   // tokens (stacked ones shrink and fan out)
@@ -698,12 +702,17 @@ function render(){
   if(emotePick)m='Tap the player you want to hit';
   $('msg').innerHTML=(m||'&nbsp;')+sub;
   if(S.fx&&S.fx.id!==lastFx){lastFx=S.fx.id;const fx=S.fx;(window.requestAnimationFrame||setTimeout)(()=>playFx(fx));}
-  if(ONLINE&&!applyingRemote){
+  if(ONLINE&&!applyingRemote&&!drawOnly){
     if(S.rolling){if(!rollSent){rollSent=true;pushState();}}   // the other phone animates the tumble itself
     else{rollSent=false;pushState();}
   }
 }
-let rollSent=false;
+let rollSent=false,rollStartedAt=0;
+// safety net: if this player's turn is frozen mid-animation for 5 s (nothing has redrawn), give the dice back
+let lastRenderAt=Date.now();
+setInterval(()=>{if(S&&S.phase==='anim'&&mine(S.turn)&&Date.now()-lastRenderAt>5000&&Date.now()-rollStartedAt>5000){
+  S.rolling=false;S.phase='roll';S.roll=null;S.msg='';render();}},1000);
+
 /* flying pickup: dice/fence fly into the player's bubble, +1 flies to the player's nest */
 let lastFx=null;
 function playFx(fx){
@@ -734,16 +743,16 @@ function playFx(fx){
 }
 /* ---------- throwables ---------- */
 const THROWS=[{k:'coconut',e:'🥥',name:'Coconut'},{k:'cactus',e:'🌵',name:'Cactus'},{k:'tomato',e:'🍅',name:'Tomato'},
-  {k:'bomb',e:'💣',name:'Bomb'},{k:'heart',e:'❤️',name:'Heart'}];
+  {k:'bomb',e:'💣',name:'Bomb'},{k:'heart',e:'❤️',name:'Heart'},{k:'kiss',e:'😘',name:'Kiss'}];
 let trayFor=null,emotePick=null,soundOn=true;const avaFx={};
 try{soundOn=localStorage.getItem('ludoSound')!=='off';}catch(e){}
 const canThrow=pi=>S&&S.phase!=='over'&&S.players[pi].type==='human'&&(ONLINE?S.players[pi].uid===ONLINE.myId:true)&&S.players.length>1;
-function toggleTray(pi){trayFor=trayFor===pi?null:pi;emotePick=null;render();}
+function toggleTray(pi){trayFor=trayFor===pi?null:pi;emotePick=null;draw();}
 function pickThrow(from,k){trayFor=null;
   const foes=S.players.map((_,i)=>i).filter(i=>i!==from);
-  if(foes.length===1){sendThrow(from,foes[0],k);emotePick=null;render();}
-  else{emotePick={from,k};render();}}
-function tapAva(pi){if(!emotePick||pi===emotePick.from)return;const{from,k}=emotePick;emotePick=null;render();sendThrow(from,pi,k);}
+  if(foes.length===1){sendThrow(from,foes[0],k);emotePick=null;draw();}
+  else{emotePick={from,k};draw();}}
+function tapAva(pi){if(!emotePick||pi===emotePick.from)return;const{from,k}=emotePick;emotePick=null;draw();sendThrow(from,pi,k);}
 function sendThrow(from,to,k){
   if(ONLINE)ONLINE.ref.child('throws').push({from,to,k,t:Date.now(),by:ONLINE.myId});
   playThrow(from,to,k);
@@ -756,7 +765,7 @@ function playThrow(from,to,k){
   const el=document.createElement('div');el.className='proj';el.textContent=t.e;
   Object.assign(el.style,{left:A.left+A.width/2+'px',top:A.top+A.height/2+'px'});document.body.appendChild(el);
   const dx=B.left+B.width/2-(A.left+A.width/2),dy=B.top+B.height/2-(A.top+A.height/2);
-  const spin=k==='heart'?0:720,lift=Math.max(90,Math.abs(dx)*.35);
+  const spin=k==='heart'||k==='kiss'?0:720,lift=Math.max(90,Math.abs(dx)*.35);
   const done=()=>{el.remove();impact(to,k);};
   if(!el.animate){done();return;}
   el.animate([{transform:'translate(-50%,-50%) rotate(0) scale(.7)'},
@@ -774,6 +783,7 @@ function impact(to,k){
   const mark=(cls,ms)=>{avaFx[to]={cls,until:Date.now()+ms};b.classList.remove(cls);void b.offsetWidth;b.classList.add(cls);
     setTimeout(()=>{const n=document.querySelector(`[data-ava="${to}"]`);if(n)n.classList.remove(cls);},ms);};
   if(k==='heart'){burst('❤️',7,55,'rise');mark('loved',1200);sfx('heart');return;}
+  if(k==='kiss'){burst('💋',5,45,'rise');burst('💕',4,60,'rise');mark('loved',1400);sfx('kiss');return;}
   mark('hit',600);
   if(k==='coconut'){burst('💥',1,0);burst('🥥',3,45);sfx('coconut');}
   if(k==='cactus'){burst('💢',2,30);burst('🌵',2,40);sfx('cactus');}
@@ -805,6 +815,7 @@ function sfx(kind){
     noise(0,1.6,1,140,.4);noise(.05,1.2,.8,320,.6);  // blast and rumble
     noise(.35,.9,.35,90,.5);                         // tail
   }
+  if(kind==='kiss'){noise(0,.05,.5,3200,2);tone(500,.02,.22,'sine',.45,1100);tone(1200,.28,.35,'sine',.25,1500);}   // mwah
   if(kind==='heart'){tone(660,0,.25,'sine',.35);tone(880,.15,.25,'sine',.35);tone(1320,.3,.45,'sine',.3);}
 }
 function toggleSound(){soundOn=!soundOn;try{localStorage.setItem('ludoSound',soundOn?'on':'off');}catch(e){}
@@ -865,6 +876,7 @@ function fbReady(){
 }
 function pushState(){
   if(!ONLINE||!S)return;
+  S.seq=(S.seq||0)+1;
   ONLINE.ref.child('state').set({json:JSON.stringify(S),writer:myId});
 }
 /* ---------- chat (online games only) ---------- */
@@ -910,6 +922,7 @@ function leaveRoom(){
 function onRemoteState(snap){
   const v=snap.val();if(!v||v.writer===myId)return;
   const next=JSON.parse(v.json),fresh=!S||S.gameId!==next.gameId;
+  if(!fresh&&(next.seq||0)<=(S.seq||0))return;   // stale copy: ignore it
   document.querySelectorAll('#online,#winov').forEach(o=>{if(fresh||o.id==='online')o.remove();});
   applyingRemote=true;S=next;if(fresh)buildBoard();render();applyingRemote=false;
   if(S.phase==='over'&&winShownFor!==S.gameId)showWin();
