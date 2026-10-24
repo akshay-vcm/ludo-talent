@@ -306,7 +306,10 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-const ITEM_COUNTS=[3,3,4,4,5],STEP=170;   // ms per square a token moves
+// Items: each type starts with 3 or 4 on the board. Items that are not collected never move.
+// After a pickup, 0-4 NEW ones of that type appear (0:1/7, 1:2/7, 2:2/7, 3:1/7, 4:1/7), never more than 6 of a type
+// on the board at once, and never fewer than 2.
+const START_COUNTS=[3,4],ADD_COUNTS=[0,1,1,2,2,3,4],MAX_ON_BOARD=6,MIN_ON_BOARD=2,STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -335,7 +338,7 @@ function newGame(){
      gameId:Math.random().toString(36).slice(2),
      turn:0,phase:'roll',roll:null,chosen:false,sixes:0,fenceUsed:false,
      items:{},fences:{},fresh:[],moves:[],winners:[],msg:'',itemsOn:cfg.items};
-  ITEM_TYPES.forEach(refreshItems);buildBoard();turnStart();
+  ITEM_TYPES.forEach(t=>addItems(t,START_COUNTS[Math.floor(Math.random()*START_COUNTS.length)]));buildBoard();turnStart();
 }
 const cur=()=>S.players[S.turn];
 const cellOf=(p,prog)=>(p.color*13+prog)%52;
@@ -350,12 +353,18 @@ function tokenXY(p,ti){
 function occupied(idx){
   return S.players.some(p=>p.tokens.some(g=>g>=0&&g<=50&&cellOf(p,g)===idx));
 }
-// Items of one type stay where they are until ANY ONE of them is collected.
-// Then every item of that type is cleared and scattered again with a new random count (3-5).
+const countOf=type=>Object.values(S.items).filter(t=>t===type).length;
+// a pickup leaves the other items of that type exactly where they are and adds 0-4 new ones elsewhere
 function refreshItems(type){
   if(!S.itemsOn)return;
-  for(const k in S.items)if(S.items[k]===type)delete S.items[k];
-  const n=ITEM_COUNTS[Math.floor(Math.random()*ITEM_COUNTS.length)];
+  let add=ADD_COUNTS[Math.floor(Math.random()*ADD_COUNTS.length)];
+  const now=countOf(type);
+  add=Math.min(add,MAX_ON_BOARD-now);
+  if(now+add<MIN_ON_BOARD)add=MIN_ON_BOARD-now;
+  addItems(type,add);
+}
+function addItems(type,n){
+  if(!S.itemsOn||n<=0)return;
   let placed=0,tries=0;
   while(placed<n&&tries++<300){
     const idx=Math.floor(Math.random()*52);
