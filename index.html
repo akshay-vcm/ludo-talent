@@ -260,6 +260,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 <div id="top">
   <button id="back" aria-label="Leave game"><svg viewBox="0 0 32 32"><path d="M19 6 9 16l10 10M10 16h15" fill="none" stroke="#6fb6ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
   <button id="chatBtn" aria-label="Chat" onclick="openChat()" style="margin-left:auto;margin-right:4px;display:none;position:relative"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M5 6h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H14l-6 5v-5H5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z"/><circle cx="10" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="16" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="22" cy="14.5" r="2" fill="#1b2a7a"/></svg><b id="chatBadge"></b></button>
+  <button id="mus" aria-label="Music on or off" onclick="toggleMusic()" style="margin-right:2px"></button>
   <button id="snd" aria-label="Sound on or off" onclick="toggleSound()" style="margin-right:6px"></button>
   <button id="menu" aria-label="Settings"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></button>
 </div>
@@ -306,10 +307,10 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-// Items: each type starts with 3 or 4 on the board. Items that are not collected never move.
-// After a pickup, 0-4 NEW ones of that type appear (0:1/7, 1:2/7, 2:2/7, 3:1/7, 4:1/7), never more than 6 of a type
-// on the board at once, and never fewer than 2.
-const START_COUNTS=[3,4],ADD_COUNTS=[0,1,1,2,2,3,4],MAX_ON_BOARD=6,MIN_ON_BOARD=2,STEP=170;   // ms per square a token moves
+// Items: each type starts with 3 on the board. Items that are not collected never move.
+// After a pickup, 0-2 NEW ones of that type appear (0:1/4, 1:2/4, 2:1/4), never more than 3 of a type
+// on the board at once, and never fewer than 1.
+const START_COUNTS=[3],ADD_COUNTS=[0,1,1,2],MAX_ON_BOARD=3,MIN_ON_BOARD=1,STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -827,6 +828,59 @@ function sfx(kind){
   if(kind==='kiss'){noise(0,.05,.5,3200,2);tone(500,.02,.22,'sine',.45,1100);tone(1200,.28,.35,'sine',.25,1500);}   // mwah
   if(kind==='heart'){tone(660,0,.25,'sine',.35);tone(880,.15,.25,'sine',.35);tone(1320,.3,.45,'sine',.3);}
 }
+/* ---------- background music: a slow, soft love-song style loop, composed in code ----------
+   Chords Fmaj7 - Em7 - Dm7 - Cmaj7 at 70 beats a minute, two bars each, with a gentle pad, a music-box
+   arpeggio, soft bass and an occasional melody note, all through a light echo. Pauses when the app is hidden. */
+let musicOn=false,musicTimer=null,musicBus=null,nextBeat=0,beatNo=0;
+try{musicOn=localStorage.getItem('ludoMusic')==='on';}catch(e){}
+const BPM=70,BEAT=60/BPM;
+const CHORDS=[[53,57,60,64],[52,55,59,62],[50,53,57,60],[48,52,55,59]];   // MIDI notes
+const MELODY=[72,74,76,79,81,79,76,74];
+const hz=m=>440*Math.pow(2,(m-69)/12);
+function musicCtx(){
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  if(!musicBus){
+    musicBus=actx.createGain();musicBus.gain.value=0;
+    const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;
+    const dl=actx.createDelay();dl.delayTime.value=BEAT*.75;const fb=actx.createGain();fb.gain.value=.32;const wet=actx.createGain();wet.gain.value=.35;
+    musicBus.connect(lp);lp.connect(actx.destination);lp.connect(dl);dl.connect(fb);fb.connect(dl);dl.connect(wet);wet.connect(actx.destination);
+  }
+  return actx;
+}
+function note(m,t,dur,type,vol,attack=.02){
+  const o=actx.createOscillator(),g=actx.createGain();o.type=type;o.frequency.value=hz(m);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+attack);g.gain.exponentialRampToValueAtTime(.0008,t+dur);
+  o.connect(g);g.connect(musicBus);o.start(t);o.stop(t+dur+.05);
+}
+function scheduleMusic(){
+  while(nextBeat<actx.currentTime+.6){
+    const t=nextBeat,bar=Math.floor(beatNo/4),ch=CHORDS[Math.floor(bar/2)%4],b=beatNo%4;
+    if(b===0&&bar%2===0){ch.forEach(m=>note(m,t,BEAT*8,'sine',.05,.8));note(ch[0]-12,t,BEAT*8,'triangle',.07,.3);}   // pad + bass
+    [0,1].forEach(h=>{const m=ch[(b*2+h)%4]+12;note(m,t+h*BEAT/2,BEAT*1.6,'triangle',.045);note(m+12,t+h*BEAT/2,BEAT*1.2,'sine',.018);}); // music box
+    if(b===0&&Math.random()<.55)note(MELODY[Math.floor(Math.random()*MELODY.length)],t+BEAT*.5,BEAT*2.5,'sine',.06,.06);
+    nextBeat+=BEAT;beatNo++;
+  }
+}
+function startMusic(){
+  try{musicCtx();if(actx.state==='suspended')actx.resume();}catch(e){return;}
+  if(musicTimer)return;
+  nextBeat=actx.currentTime+.1;
+  musicBus.gain.cancelScheduledValues(actx.currentTime);musicBus.gain.setValueAtTime(musicBus.gain.value,actx.currentTime);
+  musicBus.gain.linearRampToValueAtTime(.55,actx.currentTime+1.5);    // fade in
+  musicTimer=setInterval(scheduleMusic,150);scheduleMusic();
+}
+function stopMusic(){
+  if(!musicTimer)return;clearInterval(musicTimer);musicTimer=null;
+  if(musicBus){musicBus.gain.cancelScheduledValues(actx.currentTime);musicBus.gain.setValueAtTime(musicBus.gain.value,actx.currentTime);
+    musicBus.gain.linearRampToValueAtTime(0,actx.currentTime+.4);}
+}
+function toggleMusic(){musicOn=!musicOn;try{localStorage.setItem('ludoMusic',musicOn?'on':'off');}catch(e){}
+  $('mus').innerHTML=musicOn?MUS_ON:MUS_OFF;musicOn?startMusic():stopMusic();}
+// phones only allow sound after a tap, so a saved "music on" starts at the first tap
+document.addEventListener('pointerdown',()=>{if(musicOn&&!musicTimer&&!document.hidden)startMusic();});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopMusic();else if(musicOn)startMusic();});
+const MUS_ON='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M12 5l15-3v18.5a4.5 4.5 0 1 1-3-4.2V8.4l-9 1.8v13.3A4.5 4.5 0 1 1 12 19.3z"/></svg>';
+const MUS_OFF='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" opacity=".55" d="M12 5l15-3v18.5a4.5 4.5 0 1 1-3-4.2V8.4l-9 1.8v13.3A4.5 4.5 0 1 1 12 19.3z"/><path d="M4 4l24 24" stroke="#ff6b6b" stroke-width="3.2" stroke-linecap="round"/></svg>';
 function toggleSound(){soundOn=!soundOn;try{localStorage.setItem('ludoSound',soundOn?'on':'off');}catch(e){}
   $('snd').innerHTML=soundOn?SND_ON:SND_OFF;if(soundOn)sfx('heart');}
 const SND_ON='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M4 12h6l8-7v22l-8-7H4z"/><path d="M22 11a7 7 0 0 1 0 10M25.5 7.5a12 12 0 0 1 0 17" stroke="#6fb6ff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
@@ -834,6 +888,7 @@ const SND_OFF='<svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M4 12h6l8-7v22l-
 function esc(s){return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
 buildDefs();
 $('snd').innerHTML=soundOn?SND_ON:SND_OFF;
+$('mus').innerHTML=musicOn?MUS_ON:MUS_OFF;
 
 /* ---------- screens ---------- */
 function showSetup(){
