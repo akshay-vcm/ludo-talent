@@ -306,7 +306,7 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-const ITEM_COUNTS=[3,3,4,4,5],MAX_HELD=3,STEP=170;   // ms per square a token moves
+const ITEM_COUNTS=[3,3,4,4,5],STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -426,11 +426,11 @@ function chooseValue(v){
 }
 async function afterValue(){
   const pi=S.turn,moves=validMoves(pi,S.roll);
-  if(!moves.length){S.msg='No move possible.';render();await sleep(1000);S.msg='';nextTurn(false);return;}
+  if(!moves.length){S.msg='No move possible.';render();await sleep(300);S.msg='';nextTurn(false);return;}
   S.moves=moves;S.phase='move';render();
-  if(cur().type==='cpu'){await sleep(450);const m=botPick(pi,moves);doMove(pi,m.ti,m.sim);return;}
+  if(cur().type==='cpu'){await sleep(250);const m=botPick(pi,moves);doMove(pi,m.ti,m.sim);return;}
   const distinct=new Set(moves.map(m=>cur().tokens[m.ti]));
-  if(distinct.size===1){await sleep(400);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
+  if(distinct.size===1){await sleep(180);if(S.phase==='move'&&S.turn===pi)doMove(pi,moves[0].ti,moves[0].sim);}
 }
 async function doMove(pi,ti,sim){
   if(S.phase!=='move')return;
@@ -444,8 +444,8 @@ async function doMove(pi,ti,sim){
   const end=p.tokens[ti];
   if(end>=0&&end<=50){const idx=cellOf(p,end),it=S.items[idx];
     if(it){delete S.items[idx];
-      if(it==='dice'){if(p.dice<MAX_HELD)p.dice++;notes.push('collected a dice');}
-      else if(it==='fence'){if(p.fence<MAX_HELD)p.fence++;notes.push('collected a fence');}
+      if(it==='dice'){p.dice++;notes.push('collected a dice');}
+      else if(it==='fence'){p.fence++;notes.push('collected a fence');}
       else{bonus=true;notes.push('got +1, extra roll');}
       S.fx={id:Math.random().toString(36).slice(2),kind:it,idx,pi};
       refreshItems(it);render();await sleep(380);}}
@@ -454,13 +454,13 @@ async function doMove(pi,ti,sim){
     if(!SAFE.has(idx)){S.players.forEach((q,qi)=>{if(qi===pi)return;
       q.tokens.forEach((t,k)=>{if(t>=0&&t<=50&&cellOf(q,t)===idx){q.tokens[k]=-1;bonus=true;notes.push(`captured ${q.name}`);}});});}}
   if(g===56){bonus=true;notes.push('brought a token home');}
-  if(S.roll===6&&!S.chosen)bonus=true;
+  if(S.roll===6)bonus=true;            // rolled or picked with a dice card, a 6 always gives another turn
   if(!p.done&&p.tokens.every(t=>t===56)){p.done=true;S.winners.push(pi);removeFencesOf(pi);notes.push('finished!');}
   const left=S.players.filter(q=>!q.done);
   if(notes.length)S.msg=`${p.name} ${[...new Set(notes)].join(', ')}.`;
   render();
   if(left.length<=1){if(left.length)S.winners.push(S.players.indexOf(left[0]));S.phase='over';render();await sleep(500);showWin();return;}
-  await sleep(notes.length?450:150);
+  await sleep(notes.length?300:60);
   nextTurn(bonus);
 }
 
@@ -489,7 +489,7 @@ function botScore(pi,m){
 }
 function botPick(pi,moves){return moves.reduce((a,b)=>botScore(pi,b)>botScore(pi,a)?b:a);}
 async function botTurn(){
-  const pi=S.turn;await sleep(600);
+  const pi=S.turn;await sleep(300);
   if(S.turn!==pi||S.phase!=='roll')return;
   const p=cur();
   if(p.fence>0&&!S.fenceUsed&&Math.random()<.7){
@@ -698,8 +698,12 @@ function render(){
   if(emotePick)m='Tap the player you want to hit';
   $('msg').innerHTML=(m||'&nbsp;')+sub;
   if(S.fx&&S.fx.id!==lastFx){lastFx=S.fx.id;const fx=S.fx;(window.requestAnimationFrame||setTimeout)(()=>playFx(fx));}
-  if(ONLINE&&!applyingRemote)pushState();
+  if(ONLINE&&!applyingRemote){
+    if(S.rolling){if(!rollSent){rollSent=true;pushState();}}   // the other phone animates the tumble itself
+    else{rollSent=false;pushState();}
+  }
 }
+let rollSent=false;
 /* flying pickup: dice/fence fly into the player's bubble, +1 flies to the player's nest */
 let lastFx=null;
 function playFx(fx){
