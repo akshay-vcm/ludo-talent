@@ -207,6 +207,8 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 .speech{position:fixed;z-index:160;width:max-content;max-width:200px;background:#fff;color:#203040;font-weight:700;font-size:14px;padding:8px 12px;border-radius:14px;
   box-shadow:0 4px 12px #0006;pointer-events:none;animation:speech 3.5s ease forwards}
 @keyframes speech{0%{opacity:0;scale:.6}8%{opacity:1;scale:1}85%{opacity:1}100%{opacity:0}}
+.whack{position:fixed;z-index:212;font-size:40px;pointer-events:none;transform:translate(-50%,-50%) rotate(35deg);transform-origin:70% 90%;
+  filter:drop-shadow(0 4px 3px #0006)}
 /* pickup flight */
 .fly{position:fixed;z-index:200;pointer-events:none;will-change:transform}
 .fly svg{width:100%;height:100%;filter:drop-shadow(0 0 8px #fff8a0) drop-shadow(0 3px 2px #0006)}
@@ -307,10 +309,9 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-// Items: each type starts with 3 on the board. Items that are not collected never move.
-// After a pickup, 0-2 NEW ones of that type appear (0:1/4, 1:2/4, 2:1/4), never more than 3 of a type
-// on the board at once, and never fewer than 1.
-const START_COUNTS=[3],ADD_COUNTS=[0,1,1,2],MAX_ON_BOARD=3,MIN_ON_BOARD=1,STEP=170;   // ms per square a token moves
+// Items: there are ALWAYS exactly 3 dice, 3 fences and 3 +1 on the board. Items that are not collected never move.
+// When one is collected, exactly one new one of the same type appears on a random EMPTY square.
+const ITEMS_PER_TYPE=3,STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -339,7 +340,7 @@ function newGame(){
      gameId:Math.random().toString(36).slice(2),
      turn:0,phase:'roll',roll:null,chosen:false,sixes:0,fenceUsed:false,
      items:{},fences:{},fresh:[],moves:[],winners:[],msg:'',itemsOn:cfg.items};
-  ITEM_TYPES.forEach(t=>addItems(t,START_COUNTS[Math.floor(Math.random()*START_COUNTS.length)]));buildBoard();turnStart();
+  ITEM_TYPES.forEach(t=>addItems(t,ITEMS_PER_TYPE));buildBoard();turnStart();
 }
 const cur=()=>S.players[S.turn];
 const cellOf=(p,prog)=>(p.color*13+prog)%52;
@@ -355,21 +356,17 @@ function occupied(idx){
   return S.players.some(p=>p.tokens.some(g=>g>=0&&g<=50&&cellOf(p,g)===idx));
 }
 const countOf=type=>Object.values(S.items).filter(t=>t===type).length;
-// a pickup leaves the other items of that type exactly where they are and adds 0-4 new ones elsewhere
+// a pickup leaves the other items exactly where they are and puts one replacement on an empty square
 function refreshItems(type){
   if(!S.itemsOn)return;
-  let add=ADD_COUNTS[Math.floor(Math.random()*ADD_COUNTS.length)];
-  const now=countOf(type);
-  add=Math.min(add,MAX_ON_BOARD-now);
-  if(now+add<MIN_ON_BOARD)add=MIN_ON_BOARD-now;
-  addItems(type,add);
+  addItems(type,ITEMS_PER_TYPE-countOf(type));   // top back up to exactly 3
 }
 function addItems(type,n){
   if(!S.itemsOn||n<=0)return;
   let placed=0,tries=0;
   while(placed<n&&tries++<300){
     const idx=Math.floor(Math.random()*52);
-    if(SAFE.has(idx)||S.items[idx]||S.fences[idx]!==undefined||occupied(idx))continue;
+    if(SAFE.has(idx)||S.items[idx]!==undefined||S.fences[idx]!==undefined||occupied(idx)||idx===S.justTaken)continue;
     S.items[idx]=type;placed++;S.fresh.push(idx);
   }
 }
@@ -453,7 +450,7 @@ async function doMove(pi,ti,sim){
   // items are only collected when the move ENDS exactly on them
   const end=p.tokens[ti];
   if(end>=0&&end<=50){const idx=cellOf(p,end),it=S.items[idx];
-    if(it){delete S.items[idx];
+    if(it){delete S.items[idx];S.justTaken=idx;
       if(it==='dice'){p.dice++;notes.push('collected a dice');}
       else if(it==='fence'){p.fence++;notes.push('collected a fence');}
       else{bonus=true;notes.push('got +1, extra roll');}
@@ -796,7 +793,16 @@ function impact(to,k){
   if(k==='kiss'){burst('💋',5,45,'rise');burst('💕',4,60,'rise');mark('loved',1400);sfx('kiss');return;}
   mark('hit',600);
   if(k==='coconut'){burst('💥',1,0);burst('🥥',3,45);sfx('coconut');}
-  if(k==='cactus'){burst('💢',2,30);burst('🌵',2,40);sfx('cactus');}
+  if(k==='cactus'){
+    const c=document.createElement('div');c.className='whack';c.textContent='🌵';
+    Object.assign(c.style,{left:cx+B.width*.55+'px',top:cy-B.height*.35+'px'});document.body.appendChild(c);
+    [0,240,480,720].forEach((ms,i)=>setTimeout(()=>{
+      if(c.animate)c.animate([{transform:'translate(-50%,-50%) rotate(35deg)'},{transform:'translate(-80%,-30%) rotate(-55deg) scale(1.15)',offset:.45},
+        {transform:'translate(-50%,-50%) rotate(35deg)'}],{duration:230,easing:'ease-in-out'});
+      setTimeout(()=>{sfx('cactusHit');burst('💢',1,26);if(i%2)burst('💥',1,10);mark('hit',220);},100);
+    },ms));
+    setTimeout(()=>c.remove(),1000);
+  }
   if(k==='tomato'){burst('🍅',4,40);const sp=document.createElement('div');sp.className='splat';
     Object.assign(sp.style,{left:B.left-6+'px',top:B.top-6+'px',width:B.width+12+'px',height:B.height+12+'px'});document.body.appendChild(sp);setTimeout(()=>sp.remove(),1600);sfx('tomato');}
   if(k==='bomb'){burst('💥',3,35);burst('💨',3,55);sfx('bomb');}
@@ -807,7 +813,14 @@ function sfx(kind){
   if(!soundOn)return;
   try{actx=actx||new (window.AudioContext||window.webkitAudioContext)();if(actx.state==='suspended')actx.resume();}catch(e){return;}
   const t0=actx.currentTime;
-  if(!actx.comp){actx.comp=actx.createDynamicsCompressor();actx.comp.threshold.value=-10;actx.comp.ratio.value=4;actx.comp.connect(actx.destination);}
+  if(!actx.comp){   // boost -> compressor -> limiter: as loud as the phone allows without crackling
+    const boost=actx.createGain();boost.gain.value=2.2;
+    const comp=actx.createDynamicsCompressor();comp.threshold.value=-26;comp.knee.value=6;comp.ratio.value=8;comp.attack.value=.002;comp.release.value=.18;
+    const makeup=actx.createGain();makeup.gain.value=2.4;
+    const lim=actx.createDynamicsCompressor();lim.threshold.value=-1.5;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.001;lim.release.value=.08;
+    const clip=actx.createWaveShaper(),curve=new Float32Array(1024);   // soft clip: loud but never harsh
+    for(let i=0;i<1024;i++){const x=i/511.5-1;curve[i]=Math.tanh(1.6*x)/Math.tanh(1.6);}clip.curve=curve;
+    boost.connect(comp);comp.connect(makeup);makeup.connect(lim);lim.connect(clip);clip.connect(actx.destination);actx.comp=boost;}
   const out=actx.comp;
   const tone=(f,start,dur,type='sine',vol=.5,f2)=>{const o=actx.createOscillator(),g=actx.createGain();o.type=type;
     o.frequency.setValueAtTime(f,t0+start);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t0+start+dur);
@@ -816,9 +829,13 @@ function sfx(kind){
     for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;n.buffer=buf;const f=actx.createBiquadFilter();f.type='bandpass';f.frequency.value=freq;f.Q.value=q;
     const g=actx.createGain();g.gain.setValueAtTime(vol,t0+start);g.gain.exponentialRampToValueAtTime(.001,t0+start+dur);n.connect(f).connect(g).connect(out);n.start(t0+start);};
   if(kind==='whoosh')noise(0,.45,.25,900,.8);
-  if(kind==='coconut'){tone(210,0,.18,'sine',.8,120);tone(190,.22,.18,'sine',.8,110);noise(0,.06,.4,2500);}       // dum dum
-  if(kind==='cactus'){[0,.17,.34].forEach(d=>{tone(160,d,.16,'sine',.9,55);noise(d,.05,.35,1200,1.5);});} // dham dham dham
-  if(kind==='tomato'){noise(0,.3,.7,500,.6);tone(140,0,.2,'sine',.4,60);}
+  if(kind==='coconut'){            // two big hollow BONKs
+    [0,.24].forEach(d=>{noise(d,.04,1,3500,.8);tone(240,d,.38,'sine',1,70);tone(480,d,.16,'triangle',.7,220);tone(95,d,.3,'sine',.9,45);});
+  }
+  if(kind==='cactusHit'){          // one heavy WHACK (played on every swing)
+    noise(0,.06,1,1800,.9);noise(0,.25,1,350,.5);tone(170,0,.32,'sine',1,45);tone(85,0,.3,'sine',1,38);tone(330,0,.14,'square',.35,110);
+  }
+  if(kind==='tomato'){noise(0,.35,1,500,.6);noise(0,.12,.8,1600,1);tone(150,0,.25,'sine',.8,55);}
   if(kind==='bomb'){
     noise(0,.12,1,2500,.7);                          // sharp crack
     tone(120,0,1.1,'sine',1,28);tone(70,0,1.3,'sine',.9,22);  // deep thump
