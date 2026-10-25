@@ -209,6 +209,20 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 @keyframes speech{0%{opacity:0;scale:.6}8%{opacity:1;scale:1}85%{opacity:1}100%{opacity:0}}
 .whack{position:fixed;z-index:212;font-size:40px;pointer-events:none;transform:translate(-50%,-50%) rotate(35deg);transform-origin:70% 90%;
   filter:drop-shadow(0 4px 3px #0006)}
+/* this turn's history */
+#hist{width:var(--B);display:none;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;padding:5px 10px;margin-top:2px;
+  background:#0c1550aa;border-radius:14px;border:2px solid var(--pc)}
+#hist.on{display:flex}
+#hist.old{opacity:.7}
+#hist .hl{font-size:12px;font-weight:800;color:#d8e3ff;margin-right:4px}
+#hist i{color:#9fb4ff;font-style:normal;font-weight:900}
+#hist .hd{width:24px;height:24px;border-radius:6px;background:#fff;padding:2px;box-shadow:0 2px 0 #9fb0cc}
+#hist .hd .pips{width:100%;height:100%;fill:#1f2d78;display:block}
+#hist .hd.hc{background:#fff3df;box-shadow:0 2px 0 #e0700f}
+#hist .hd.hc .pips{fill:#e0700f}
+#hist .hp{background:linear-gradient(#ffb43a,#ff8a12);color:#fff;font-size:12px;font-weight:900;border-radius:6px;padding:4px 6px;box-shadow:0 2px 0 #c95a0a}
+#hist .hx{background:#e8433a;color:#fff;font-size:12px;border-radius:6px;padding:4px 7px}
+#hist .hw{flex-basis:100%;text-align:center;font-size:12px;font-weight:800;color:#ffd166}
 /* pickup flight */
 .fly{position:fixed;z-index:200;pointer-events:none;will-change:transform}
 .fly svg{width:100%;height:100%;filter:drop-shadow(0 0 8px #fff8a0) drop-shadow(0 3px 2px #0006)}
@@ -269,6 +283,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 <div class="row" id="topRow"></div>
 <div id="wrap"><div id="board"></div><div id="tokens"></div></div>
 <div class="row" id="botRow"></div>
+<div id="hist" aria-live="polite"></div>
 <div id="msg" aria-live="polite"></div>
 <div id="chat" hidden>
   <div class="chead"><b>Chat</b><button onclick="closeChat()" aria-label="Close chat">✕</button></div>
@@ -339,7 +354,7 @@ function newGame(){
       type:cfg.seats[c].type,uid:cfg.seats[c].uid||null,tokens:[-1,-1,-1,-1],dice:0,fence:0,done:false})),
      gameId:Math.random().toString(36).slice(2),
      turn:0,phase:'roll',roll:null,chosen:false,sixes:0,fenceUsed:false,
-     items:{},fences:{},fresh:[],moves:[],winners:[],msg:'',itemsOn:cfg.items};
+     items:{},fences:{},fresh:[],hist:[],moves:[],winners:[],msg:'',itemsOn:cfg.items};
   ITEM_TYPES.forEach(t=>addItems(t,ITEMS_PER_TYPE));buildBoard();turnStart();
 }
 const cur=()=>S.players[S.turn];
@@ -409,7 +424,8 @@ function turnStart(){
 function nextTurn(bonus){
   if(S.phase==='over')return;
   if(!bonus||cur().done){
-    S.sixes=0;
+    if(S.hist&&S.hist.length)S.lastHist={pi:S.turn,h:S.hist};   // keep it on screen until the next player rolls
+    S.sixes=0;S.hist=[];
     do{S.turn=(S.turn+1)%S.players.length;}while(cur().done);
     removeFencesOf(S.turn);           // your fences expire when your turn comes round again
   }
@@ -421,14 +437,16 @@ async function doRoll(){
   S.phase='anim';S.rolling=true;rollStartedAt=Date.now();
   for(let k=0;k<5;k++){S.roll=1+Math.floor(Math.random()*6);render();await sleep(45);}
   S.rolling=false;const v=rollDie(cur().dry||0,S.sixes>0);
+  (S.hist=S.hist||[]).push({v});
   S.roll=v;S.chosen=false;cur().last=v;cur().dry=v===6?0:(cur().dry||0)+1;
   if(v===6){S.sixes++;
-    if(S.sixes===3){S.msg='Three sixes in a row, turn lost.';render();await sleep(1100);S.msg='';nextTurn(false);return;}
+    if(S.sixes===3){S.hist.push({x:1});S.msg='Three sixes in a row, turn lost.';render();await sleep(1100);S.msg='';nextTurn(false);return;}
   }else S.sixes=0;
   afterValue();
 }
 function chooseValue(v){
   if(S.phase!=='choose')return;
+  (S.hist=S.hist||[]).push({v,c:1});
   cur().dice--;S.roll=v;S.chosen=true;cur().last=v;S.phase='anim';afterValue();
 }
 async function afterValue(){
@@ -453,7 +471,7 @@ async function doMove(pi,ti,sim){
     if(it){delete S.items[idx];S.justTaken=idx;
       if(it==='dice'){p.dice++;notes.push('collected a dice');}
       else if(it==='fence'){p.fence++;notes.push('collected a fence');}
-      else{bonus=true;notes.push('got +1, extra roll');}
+      else{bonus=true;notes.push('got +1, extra roll');(S.hist=S.hist||[]).push({p:1});}
       S.fx={id:Math.random().toString(36).slice(2),kind:it,idx,pi};
       refreshItems(it);render();await sleep(380);}}
   const g=p.tokens[ti];
@@ -708,6 +726,14 @@ function render(){
   else if(S.phase==='choose')m='&nbsp;';
   if(emotePick)m='Tap the player you want to hit';
   $('msg').innerHTML=(m||'&nbsp;')+sub;
+  // this turn so far: 6 › 6 › +1 › 2 ...
+  const live=(S.hist||[]).length>0,prevT=!live&&S.lastHist,h=live?S.hist:prevT?S.lastHist.h:[],hb=$('hist'),hp=prevT?S.players[S.lastHist.pi]:p;
+  if(!h.length||S.phase==='over'){hb.innerHTML='';hb.className='';}
+  else{hb.className='on'+(prevT?' old':'');hb.style.setProperty('--pc',COLORS[hp.color].css);
+    hb.innerHTML=`<span class="hl">${esc(hp.name)}'s ${prevT?'last turn':'turn'}</span>`+h.map((e,i)=>(i?'<i>›</i>':'')+(
+      e.p?'<b class="hp">+1</b>':e.x?'<b class="hx">✕ turn lost</b>':
+      `<b class="hd${e.c?' hc':''}" title="${e.c?'picked with a dice card':'rolled'}">${pips(e.v)}</b>`)).join('')+
+      (live&&S.sixes===2&&S.phase!=='anim'&&!h[h.length-1].x?'<span class="hw">2 sixes rolled: a 3rd rolled 6 loses the turn</span>':'');}
   if(S.fx&&S.fx.id!==lastFx){lastFx=S.fx.id;const fx=S.fx;(window.requestAnimationFrame||setTimeout)(()=>playFx(fx));}
   if(ONLINE&&!applyingRemote&&!drawOnly){
     if(S.rolling){if(!rollSent){rollSent=true;pushState();}}   // the other phone animates the tumble itself
@@ -1008,7 +1034,7 @@ function onRemoteState(snap){
   applyingRemote=true;S=next;if(fresh)buildBoard();render();applyingRemote=false;
   if(S.phase==='over'&&winShownFor!==S.gameId)showWin();
 }
-const CODE_CHARS='ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+const CODE_CHARS='0123456789';   // room codes are 4 digits, e.g. 4827
 const newCode=()=>[...Array(4)].map(()=>CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]).join('');
 
 function showOnline(){
@@ -1024,14 +1050,14 @@ function showOnline(){
       ${err?`<p style="color:#d33;margin-top:10px">${esc(err)}</p>`:''}
       <h2>Your name</h2><div class="seat"><input id="nm" maxlength="12" placeholder="Name" value="${esc(myName)}"></div>
       <button class="start" id="mk" ${err?'disabled':''}>Create a room</button>
-      <h2>Join a friend</h2><div class="seat"><input id="cd" maxlength="4" placeholder="Room code" style="text-transform:uppercase;letter-spacing:3px">
+      <h2>Join a friend</h2><div class="seat"><input id="cd" maxlength="4" placeholder="4-digit code" inputmode="numeric" pattern="[0-9]*" style="letter-spacing:4px">
       <button id="jn" ${err?'disabled':''}>Join</button></div>
       <p id="jerr" style="color:#d33"></p>
       <button class="x" id="bk" style="margin-top:10px;color:var(--cardMuted);font-weight:700">Back</button>`);
     ov.querySelector('#nm').oninput=e=>myName=e.target.value.trim();
     ov.querySelector('#bk').onclick=back;
     ov.querySelector('#mk').onclick=()=>{if(!myName)return ov.querySelector('#nm').focus();hostSetup();};
-    ov.querySelector('#jn').onclick=()=>{if(!myName)return ov.querySelector('#nm').focus();join(ov.querySelector('#cd').value.trim().toUpperCase());};
+    ov.querySelector('#jn').onclick=()=>{if(!myName)return ov.querySelector('#nm').focus();join(ov.querySelector('#cd').value.replace(/\D/g,''));};
   }
 
   function hostSetup(){
@@ -1060,7 +1086,8 @@ function showOnline(){
 
   async function createRoom(){
     let code,ref;
-    for(let i=0;i<8;i++){code=newCode();ref=db.ref('rooms/'+code);if(!(await ref.child('meta').get()).exists())break;}
+    for(let i=0;i<20;i++){code=newCode();ref=db.ref('rooms/'+code);const m=(await ref.child('meta').get()).val();
+      if(!m||Date.now()-(m.created||0)>24*3600*1000)break;}
     const seats={};
     seatColors(host.n).forEach(c=>{const t=host.seats[c];
       seats[c]={type:t,name:t==='host'?myName:t==='cpu'?COLORS[c].name:'',uid:t==='host'?myId:''};});
@@ -1072,7 +1099,7 @@ function showOnline(){
 
   async function join(code){
     const jerr=ov.querySelector('#jerr');
-    if(code.length!==4){jerr.textContent='Room codes have 4 characters.';return;}
+    if(code.length!==4){jerr.textContent='Room codes have 4 digits.';return;}
     const ref=db.ref('rooms/'+code);
     const meta=(await ref.child('meta').get()).val();
     if(!meta){jerr.textContent='No room with code '+code+'. Check the code with your friend.';return;}
