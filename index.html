@@ -188,11 +188,11 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 /* chat */
 #chatBtn b{position:absolute;top:2px;right:0;min-width:17px;height:17px;border-radius:9px;background:#ff3b3b;color:#fff;font-size:11px;font-weight:900;
   display:grid;place-items:center;padding:0 3px;box-shadow:0 0 0 2px #1b2a7a}
-#chat{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(100vw,520px);height:min(62svh,460px);z-index:150;
+#chat{position:fixed;left:50%;bottom:0;transform:translateX(-50%);width:min(100vw,520px);height:min(40svh,310px);z-index:150;
   background:var(--card);color:var(--cardInk);border-radius:20px 20px 0 0;box-shadow:0 -8px 30px #0007;display:flex;flex-direction:column;
   padding:12px 12px max(12px,env(safe-area-inset-bottom))}
 #chat[hidden]{display:none}
-.chead{display:flex;justify-content:space-between;align-items:center;font-size:17px;padding:0 4px 8px}
+.chead{display:flex;justify-content:space-between;align-items:center;font-size:15px;padding:0 4px 4px}
 .chead button{font-size:20px;color:var(--cardMuted);width:34px;height:34px}
 #clog{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:4px}
 .cm{align-self:flex-start;max-width:82%;background:var(--chip);border-radius:14px 14px 14px 4px;padding:7px 11px;font-size:15px;line-height:1.35;word-wrap:break-word}
@@ -223,6 +223,18 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 #hist .hp{background:linear-gradient(#ffb43a,#ff8a12);color:#fff;font-size:12px;font-weight:900;border-radius:6px;padding:4px 6px;box-shadow:0 2px 0 #c95a0a}
 #hist .hx{background:#e8433a;color:#fff;font-size:12px;border-radius:6px;padding:4px 7px}
 #hist .hw{flex-basis:100%;text-align:center;font-size:12px;font-weight:800;color:#ffd166}
+/* throw button on other players + reactions */
+.thr{width:32px;height:32px;border-radius:50%;background:#fff;font-size:18px;display:grid;place-items:center;flex:none;
+  box-shadow:0 3px 0 #9fb0cc,0 4px 8px #0005}
+.thr.live{box-shadow:0 0 0 3px #ffe066,0 0 12px #ffe066}
+.tray.react{flex-wrap:wrap;width:min(92vw,330px);border-radius:18px;justify-content:center;gap:2px}
+.corner:not(.r) .tray.react{left:0}
+.tray button.txt{width:auto;padding:0 10px;font-size:14px;font-weight:800;color:#203040;background:#eef3f8;border-radius:999px;height:32px;margin:3px 2px}
+.bub.chatb b{top:-4px;right:-4px}
+.reactPop{position:fixed;z-index:215;font-size:54px;pointer-events:none;transform:translate(-50%,-50%);animation:reactPop 2.2s ease forwards;
+  filter:drop-shadow(0 4px 6px #0006)}
+@keyframes reactPop{0%{transform:translate(-50%,-50%) scale(.2);opacity:0}15%{transform:translate(-50%,-50%) scale(1.3);opacity:1}
+  25%{transform:translate(-50%,-50%) scale(1)}80%{opacity:1;transform:translate(-50%,-70%)}100%{opacity:0;transform:translate(-50%,-90%)}}
 /* pickup flight */
 .fly{position:fixed;z-index:200;pointer-events:none;will-change:transform}
 .fly svg{width:100%;height:100%;filter:drop-shadow(0 0 8px #fff8a0) drop-shadow(0 3px 2px #0006)}
@@ -275,8 +287,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="defs"></defs></svg>
 <div id="top">
   <button id="back" aria-label="Leave game"><svg viewBox="0 0 32 32"><path d="M19 6 9 16l10 10M10 16h15" fill="none" stroke="#6fb6ff" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
-  <button id="chatBtn" aria-label="Chat" onclick="openChat()" style="margin-left:auto;margin-right:4px;display:none;position:relative"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M5 6h22a3 3 0 0 1 3 3v11a3 3 0 0 1-3 3H14l-6 5v-5H5a3 3 0 0 1-3-3V9a3 3 0 0 1 3-3z"/><circle cx="10" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="16" cy="14.5" r="2" fill="#1b2a7a"/><circle cx="22" cy="14.5" r="2" fill="#1b2a7a"/></svg><b id="chatBadge"></b></button>
-  <button id="mus" aria-label="Music on or off" onclick="toggleMusic()" style="margin-right:2px"></button>
+  <button id="mus" aria-label="Music on or off" onclick="toggleMusic()" style="margin-left:auto;margin-right:2px"></button>
   <button id="snd" aria-label="Sound on or off" onclick="toggleSound()" style="margin-right:6px"></button>
   <button id="menu" aria-label="Settings"><svg viewBox="0 0 32 32"><path fill="#6fb6ff" d="M13.6 2h4.8l.8 3.6 2.6 1.1 3.1-2 3.4 3.4-2 3.1 1.1 2.6 3.6.8v4.8l-3.6.8-1.1 2.6 2 3.1-3.4 3.4-3.1-2-2.6 1.1-.8 3.6h-4.8l-.8-3.6-2.6-1.1-3.1 2-3.4-3.4 2-3.1-1.1-2.6L2 18.4v-4.8l3.6-.8 1.1-2.6-2-3.1 3.4-3.4 3.1 2 2.6-1.1zM16 11a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg></button>
 </div>
@@ -644,7 +655,7 @@ function cornerHTML(c){
   const pos=screenCorner(c),cls=(pos[0]==='t'?'t ':'')+(pos[1]==='r'?'r':'');
   const pi=S.players.findIndex(p=>p.color===c);
   if(pi<0)return `<div class="corner ${cls} empty"></div>`;
-  const p=S.players[pi],on=pi===S.turn&&S.phase!=='over',ctl=canControl(pi),canAct=on&&ctl&&S.phase==='roll';
+  const p=S.players[pi],on=pi===S.turn&&S.phase!=='over',ctl=canControl(pi),canAct=on&&ctl&&S.phase==='roll',me=meIdx();
   let face,dcls='bigdie';
   if(!on)dcls+=' hide';
   if(on&&S.rolling)dcls+=' spin';
@@ -655,11 +666,14 @@ function cornerHTML(c){
      aria-label="${kind}, ${n} left">${icon}${n?`<b>${n}</b>`:''}</button>`;
   return `<div class="corner ${cls} ${p.done?'out':on?'on':''}">
     <div class="prow"><div class="ava ${emotePick&&emotePick.from!==pi?'target':''} ${avaFx[pi]&&avaFx[pi].until>Date.now()?avaFx[pi].cls:''}" data-ava="${pi}" onclick="tapAva(${pi})"><i>${PERSON}</i>${p.type==='cpu'?'<span class="bot">🤖</span>':''}</div>
-      <button class="${dcls}" onclick="tapDie(${pi})" aria-label="Roll the dice">${face}</button></div>
+      <button class="${dcls}" onclick="tapDie(${pi})" aria-label="Roll the dice">${face}</button>
+      ${me>=0&&pi!==me&&S.phase!=='over'?`<button class="thr ${trayFor===pi?'live':''}" onclick="toggleTray(${pi})" aria-label="Throw something at ${esc(p.name)}">🥥</button>`:''}</div>
     ${trayFor===pi?`<div class="tray">${THROWS.map(t=>`<button onclick="pickThrow(${pi},'${t.k}')" aria-label="${t.name}">${t.e}</button>`).join('')}</div>`:''}
+    ${reactOpen&&pi===me?`<div class="tray react">${REACTS.map((r,i)=>`<button class="${r.length>2?'txt':''}" onclick="pickReact(${i})">${esc(r)}</button>`).join('')}</div>`:''}
     <div class="brow ${ONLINE&&!ctl?'hidden':''}">${bub('Pick a number',p.dice,DIE_SVG,'tapPick',on&&S.phase==='choose',canAct&&p.dice||on&&ctl&&S.phase==='choose')}
       ${bub('Place a fence',p.fence,FENCE_SVG,'tapFence',on&&S.phase==='fence',canAct&&p.fence&&!S.fenceUsed||on&&ctl&&S.phase==='fence')}
-      ${canThrow(pi)?`<button class="bub emo ${trayFor===pi?'live':''}" onclick="toggleTray(${pi})" aria-label="Throw something at a player"><span>🥥</span></button>`:''}</div>
+      ${pi===me&&S.phase!=='over'?`<button class="bub emo rct ${reactOpen?'live':''}" onclick="toggleReact()" aria-label="React"><span>😂</span></button>`:''}
+      ${pi===me&&ONLINE?`<button class="bub emo chatb" onclick="openChat()" aria-label="Chat"><span>💬</span>${unread?`<b>${unread>9?'9+':unread}</b>`:''}</button>`:''}</div>
   </div>`;
 }
 
@@ -777,14 +791,30 @@ function playFx(fx){
 /* ---------- throwables ---------- */
 const THROWS=[{k:'coconut',e:'🥥',name:'Coconut'},{k:'cactus',e:'🌵',name:'Cactus'},{k:'tomato',e:'🍅',name:'Tomato'},
   {k:'bomb',e:'💣',name:'Bomb'},{k:'heart',e:'❤️',name:'Heart'},{k:'kiss',e:'😘',name:'Kiss'}];
-let trayFor=null,emotePick=null,soundOn=true;const avaFx={};
+let trayFor=null,emotePick=null,reactOpen=false,soundOn=true;const avaFx={};
+const REACTS=['😂','🤭','😎','😭','😡','😍','👍','🙏','Haha!','Wow!','Oops!','Nice one!','Hurry up!'];
+// "me" = the player on this phone: online your own seat; on one phone the human whose turn it is (or the first human)
+function meIdx(){if(!S)return -1;
+  if(ONLINE)return S.players.findIndex(p=>p.uid===ONLINE.myId);
+  if(cur().type==='human')return S.turn;return S.players.findIndex(p=>p.type==='human');}
 try{soundOn=localStorage.getItem('ludoSound')!=='off';}catch(e){}
 const canThrow=pi=>S&&S.phase!=='over'&&S.players[pi].type==='human'&&(ONLINE?S.players[pi].uid===ONLINE.myId:true)&&S.players.length>1;
-function toggleTray(pi){trayFor=trayFor===pi?null:pi;emotePick=null;draw();}
-function pickThrow(from,k){trayFor=null;
-  const foes=S.players.map((_,i)=>i).filter(i=>i!==from);
-  if(foes.length===1){sendThrow(from,foes[0],k);emotePick=null;draw();}
-  else{emotePick={from,k};draw();}}
+function toggleTray(pi){trayFor=trayFor===pi?null:pi;reactOpen=false;draw();}
+function toggleReact(){reactOpen=!reactOpen;trayFor=null;draw();}
+// the tray opens on the player you want to hit; whatever you pick flies from you to them
+function pickThrow(to,k){trayFor=null;const me=meIdx();draw();if(me>=0&&to!==me)sendThrow(me,to,k);}
+function pickReact(i){reactOpen=false;draw();const me=meIdx();if(me<0)return;
+  if(ONLINE)ONLINE.ref.child('throws').push({from:me,to:me,k:'react',r:REACTS[i],t:Date.now(),by:ONLINE.myId});
+  showReact(me,REACTS[i]);}
+function showReact(pi,r){
+  const a=document.querySelector(`[data-ava="${pi}"]`);if(!a)return;const B=a.getBoundingClientRect(),txt=r.length>2;
+  const el=document.createElement('div');el.className=txt?'speech':'reactPop';el.textContent=r;
+  const top=B.top<innerHeight/2;
+  if(txt)Object.assign(el.style,{left:Math.min(Math.max(B.left+B.width/2,90),innerWidth-90)+'px',top:(top?B.bottom+8:B.top-8)+'px',transform:`translate(-50%,${top?'0':'-100%'})`});
+  else Object.assign(el.style,{left:B.left+B.width/2+'px',top:(top?B.bottom+30:B.top-30)+'px'});
+  document.body.appendChild(el);setTimeout(()=>el.remove(),txt?3000:2200);sfx(txt?'heart':'pop');}
+// tapping anywhere else closes an open tray
+document.addEventListener('pointerdown',e=>{if((trayFor!==null||reactOpen)&&!e.target.closest('.tray,.thr,.rct')){trayFor=null;reactOpen=false;draw();}},true);
 function tapAva(pi){if(!emotePick||pi===emotePick.from)return;const{from,k}=emotePick;emotePick=null;draw();sendThrow(from,pi,k);}
 function sendThrow(from,to,k){
   if(ONLINE)ONLINE.ref.child('throws').push({from,to,k,t:Date.now(),by:ONLINE.myId});
@@ -868,6 +898,7 @@ function sfx(kind){
     noise(0,1.6,1,140,.4);noise(.05,1.2,.8,320,.6);  // blast and rumble
     noise(.35,.9,.35,90,.5);                         // tail
   }
+  if(kind==='pop'){tone(520,0,.12,'sine',.5,900);tone(780,.08,.14,'sine',.35);}
   if(kind==='kiss'){noise(0,.05,.5,3200,2);tone(500,.02,.22,'sine',.45,1100);tone(1200,.28,.35,'sine',.25,1500);}   // mwah
   if(kind==='heart'){tone(660,0,.25,'sine',.35);tone(880,.15,.25,'sine',.35);tone(1320,.3,.45,'sine',.3);}
 }
@@ -989,8 +1020,8 @@ function pushState(){
 /* ---------- chat (online games only) ---------- */
 const QUICK=['Nice move! 👍','😂😂','Hurry up! ⏳','Oops 😅','Good game 🤝','Not fair! 😤'];
 let unread=0;
-function chatVisible(on){$('chatBtn').style.display=on?'':'none';if(!on){closeChat();$('clog').innerHTML='';unread=0;badge();}}
-function badge(){const b=$('chatBadge');b.textContent=unread>9?'9+':unread||'';b.style.display=unread?'':'none';}
+function chatVisible(on){if(!on){closeChat();$('clog').innerHTML='';unread=0;}badge();}
+function badge(){if(S&&tokEls.length)draw();}
 function openChat(){$('chat').hidden=false;unread=0;badge();$('clog').scrollTop=1e6;}
 function closeChat(){$('chat').hidden=true;}
 function sendChat(text){
@@ -1019,7 +1050,7 @@ function listenChat(ref){
 function listenThrows(ref){
   const since=Date.now()-1000;
   ref.child('throws').on('child_added',snap=>{const v=snap.val();
-    if(!v||v.by===myId||v.t<since||!S)return;playThrow(v.from,v.to,v.k);});
+    if(!v||v.by===myId||v.t<since||!S)return;if(v.k==='react')showReact(v.from,v.r);else playThrow(v.from,v.to,v.k);});
 }
 function leaveRoom(){
   if(!ONLINE)return;
@@ -1146,7 +1177,6 @@ function toMenu(){if(document.getElementById('setup')||document.getElementById('
   document.querySelectorAll('.ov').forEach(o=>o.remove());leaveRoom();showSetup();}
 document.querySelector('#chat .quick').innerHTML=QUICK.map(q=>`<button onclick="sendChat(this.textContent)">${q}</button>`).join('');
 $('ctext').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat();});
-$('chatBadge').style.display='none';
 $('menu').onclick=toMenu;$('back').onclick=toMenu;
 showSetup();
 </script>
