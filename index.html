@@ -257,6 +257,7 @@ button:focus-visible{outline:3px solid #fff;outline-offset:2px;border-radius:10p
 #picker .nums .bigdie{width:52px;height:52px;padding:6px}
 #picker .nums{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;justify-items:center}
 #picker .nums .bigdie:disabled{opacity:.3}
+#picker .no6{font-size:12.5px;font-weight:800;color:#c2410c;margin:-4px 0 10px}
 #picker .x{margin-top:12px;color:#61707f;font-weight:800}
 
 @media (prefers-reduced-motion:reduce){.it,.it.plus,.bigdie.go,.bigdie.spin,.tk.can,#arrow,.cell.pick::before{animation:none}.tk{transition:none}}
@@ -335,9 +336,9 @@ const SPOTS=[[2,2],[4,2],[2,4],[4,4]];
 const FINISH=[[6.85,7.5],[7.5,6.85],[8.15,7.5],[7.5,8.15]];
 const ITEM_TYPES=['dice','fence','plus'];
 // after any pickup, that item type is re-scattered: 3 (40%), 4 (40%) or 5 (20%) of them at fresh random squares
-// Items: there are ALWAYS exactly 3 dice, 3 fences and 3 +1 on the board. Items that are not collected never move.
+// Items: there are ALWAYS exactly 2 dice, 2 fences and 2 +1 on the board. Items that are not collected never move.
 // When one is collected, exactly one new one of the same type appears on a random EMPTY square.
-const ITEMS_PER_TYPE=3,STEP=170;   // ms per square a token moves
+const ITEMS_PER_TYPE=2,STEP=170;   // ms per square a token moves
 // Six weighting: base weights 1,1,1,1,1,1.2 -> P(6) = 1.2/6.2 = 19.4% (a fair die is 16.7%).
 // The bonus roll right after a 6 uses a plain fair die, so double sixes stay rare (about 3.7% of rolls).
 // Drought protection: after 5 rolls in a row without a 6, each further dry roll adds +1.5 to the six's weight
@@ -385,7 +386,7 @@ const countOf=type=>Object.values(S.items).filter(t=>t===type).length;
 // a pickup leaves the other items exactly where they are and puts one replacement on an empty square
 function refreshItems(type){
   if(!S.itemsOn)return;
-  addItems(type,ITEMS_PER_TYPE-countOf(type));   // top back up to exactly 3
+  addItems(type,ITEMS_PER_TYPE-countOf(type));   // top back up to exactly 2
 }
 function addItems(type,n){
   if(!S.itemsOn||n<=0)return;
@@ -412,6 +413,8 @@ function simulate(pi,ti,v){
     path.push(s);
   }
   if(!path.length)return null;        // fence right in front: this token cannot move
+  const end=path[path.length-1];
+  if(end<=50&&blockAt(pi,cellOf(p,end)))return null;   // an opponent's pair sits there: this token can't land there
   return {path,blocked};
 }
 function validMoves(pi,v){
@@ -424,6 +427,10 @@ function capturesAt(pi,idx){
   if(SAFE.has(idx))return 0;let n=0;
   S.players.forEach((q,qi)=>{if(qi!==pi)q.tokens.forEach(g=>{if(g>=0&&g<=50&&cellOf(q,g)===idx)n++;});});
   return n;
+}
+// a "block" (jodi) = two or more tokens of ONE opponent on the same main-track square
+function blockAt(pi,idx){
+  return S.players.some((q,qi)=>qi!==pi&&q.tokens.filter(g=>g>=0&&g<=50&&cellOf(q,g)===idx).length>=2);
 }
 function removeFencesOf(pi){for(const k in S.fences)if(S.fences[k]===pi)delete S.fences[k];}
 
@@ -457,6 +464,8 @@ async function doRoll(){
 }
 function chooseValue(v){
   if(S.phase!=='choose')return;
+  if(v===6&&S.sixes>=2)return;              // a 3rd six in a row can't be picked either
+  S.sixes=v===6?S.sixes+1:0;
   (S.hist=S.hist||[]).push({v,c:1});
   cur().dice--;S.roll=v;S.chosen=true;cur().last=v;S.phase='anim';afterValue();
 }
@@ -537,9 +546,9 @@ async function botTurn(){
   }
   if(p.dice>0){
     let pick=null;
-    for(let v=1;v<=6&&!pick;v++)for(const m of validMoves(pi,v)){const f=finalOf(pi,m);
+    for(let v=1;v<=6&&!pick;v++)if(!(v===6&&S.sixes>=2))for(const m of validMoves(pi,v)){const f=finalOf(pi,m);
       if((f<=50&&capturesAt(pi,cellOf(p,f)))||(f===56&&p.tokens[m.ti]<56)){pick=v;break;}}
-    if(!pick&&p.tokens.every(t=>t===-1||t===56)&&p.tokens.some(t=>t===-1))pick=6;
+    if(!pick&&S.sixes<2&&p.tokens.every(t=>t===-1||t===56)&&p.tokens.some(t=>t===-1))pick=6;
     if(pick){S.phase='choose';chooseValue(pick);return;}
   }
   doRoll();
@@ -727,8 +736,8 @@ function render(){
   // number picker
   const old=$('picker');if(old)old.remove();
   if(S.phase==='choose'&&human){const d=document.createElement('div');d.id='picker';
-    let nums='';for(let v=1;v<=6;v++)nums+=`<button class="bigdie" onclick="chooseValue(${v})" ${validMoves(S.turn,v).length?'':'disabled'} aria-label="${v}">${pips(v)}</button>`;
-    d.innerHTML=`<p>Pick your number</p><div class="nums">${nums}</div><button class="x" onclick="cancelMode()">Cancel</button>`;
+    let nums='';for(let v=1;v<=6;v++)nums+=`<button class="bigdie" onclick="chooseValue(${v})" ${validMoves(S.turn,v).length&&!(v===6&&S.sixes>=2)?'':'disabled'} aria-label="${v}">${pips(v)}</button>`;
+    d.innerHTML=`<p>Pick your number</p>${S.sixes>=2?'<p class="no6">Two 6s in a row already: a 3rd 6 isn\'t allowed</p>':''}<div class="nums">${nums}</div><button class="x" onclick="cancelMode()">Cancel</button>`;
     $('wrap').appendChild(d);}
   // message
   let m='';const sub=S.msg?`<small>${esc(S.msg)}</small>`:'';
@@ -747,7 +756,7 @@ function render(){
     hb.innerHTML=`<span class="hl">${esc(hp.name)}'s ${prevT?'last turn':'turn'}</span>`+h.map((e,i)=>(i?'<i>›</i>':'')+(
       e.p?'<b class="hp">+1</b>':e.x?'<b class="hx">✕ turn lost</b>':
       `<b class="hd${e.c?' hc':''}" title="${e.c?'picked with a dice card':'rolled'}">${pips(e.v)}</b>`)).join('')+
-      (live&&S.sixes===2&&S.phase!=='anim'&&!h[h.length-1].x?'<span class="hw">2 sixes rolled: a 3rd rolled 6 loses the turn</span>':'');}
+      (live&&S.sixes===2&&S.phase!=='anim'&&!h[h.length-1].x?'<span class="hw">Two 6s in a row: a 3rd 6 is not allowed (rolled = turn lost)</span>':'');}
   if(S.fx&&S.fx.id!==lastFx){lastFx=S.fx.id;const fx=S.fx;(window.requestAnimationFrame||setTimeout)(()=>playFx(fx));}
   if(ONLINE&&!applyingRemote&&!drawOnly){
     if(S.rolling){if(!rollSent){rollSent=true;pushState();}}   // the other phone animates the tumble itself
