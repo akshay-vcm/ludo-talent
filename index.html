@@ -428,8 +428,9 @@ function capturesAt(pi,idx){
   S.players.forEach((q,qi)=>{if(qi!==pi)q.tokens.forEach(g=>{if(g>=0&&g<=50&&cellOf(q,g)===idx)n++;});});
   return n;
 }
-// a "block" (jodi) = two or more tokens of ONE opponent on the same main-track square
+// a "block" (jodi) = two or more tokens of ONE opponent on the same main-track square (not on star/start squares)
 function blockAt(pi,idx){
+  if(SAFE.has(idx))return false;           // on a star / start square (adda) anyone can sit, pairs or not
   return S.players.some((q,qi)=>qi!==pi&&q.tokens.filter(g=>g>=0&&g<=50&&cellOf(q,g)===idx).length>=2);
 }
 function removeFencesOf(pi){for(const k in S.fences)if(S.fences[k]===pi)delete S.fences[k];}
